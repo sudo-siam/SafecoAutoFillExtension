@@ -1,0 +1,28 @@
+{
+  "manifest_version": 3,
+  "name": "Safeco AutoFill Extension",
+  "version": "1.0",
+  "permissions": [
+    "tabs",
+    "storage",
+    "https://script.google.com/macros/s/*",
+    "scripting"
+  ],
+  "host_permissions": [
+    "https://script.google.com/macros/s/*",
+    "https://personal.safeco.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Safeco AutoFill Extension"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"]
+    }
+  ]
+}
