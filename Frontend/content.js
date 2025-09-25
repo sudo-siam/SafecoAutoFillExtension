@@ -60,11 +60,33 @@ async function fetchGaragedLocations() {
   }
 }
 
+async function fetchDrivers() {
+
+  try {
+    console.log("Fetching ID:", currentID);
+    const response = await fetch(`${API_URL}?action=getData&id=${currentID}&sheetname=${encodeURIComponent(formSection)}`); 
+    const json = await response.json();
+    if (json.status === "success") {
+      const driversApiData = json.data;
+      console.log("Fetched Drivers:", driversApiData);  
+      // Fill the form
+      fillUpDrivers([driversApiData]);
+      await new Promise(res => setTimeout(res, 500));
+    } else {
+      console.error("API error:", json.message);
+    }
+  } catch (err) {
+    console.error("Fetch error:", err);
+  } 
+}
+
 function callAPIForTab(tabName) {
   if (tabName === "Policy Information") {
     fetchPolicyInformation();
   } else if (tabName === "Garaged Locations") {
     fetchGaragedLocations();
+  } else if (tabName === "Drivers") {
+    fetchDrivers();
   }
 }
 
@@ -125,6 +147,26 @@ function splitPhoneNumber(phone) {
   };
 }
 
+function convertDate(dateValue) {
+  if (!dateValue) return "";
+
+  const parts = dateValue.split("/");
+  if (parts.length !== 3) return dateValue; // return as-is if not in expected format
+
+  let [month, day, year] = parts;
+
+  // Ensure month and day are always 2 digits
+  month = month.padStart(2, "0");
+  day = day.padStart(2, "0");
+
+  // Convert 2-digit year to 4-digit (assume 20xx)
+  if (year.length === 2) {
+    year = "20" + year;
+  }
+
+  return `${month}/${day}/${year}`;
+}
+
 function fillUpPolicyInformation(data) {
   const PolicyRatingState = document.querySelector("#PolicyRatingState");
   const ProducerID = document.querySelector("#PolicyProducerName");
@@ -152,6 +194,7 @@ function fillUpPolicyInformation(data) {
   const PolicyClientMailingLocationZipCode = document.querySelector("#PolicyClientMailingLocationZipCode");
   const PolicyClientMailingLocationCity = document.querySelector("#PolicyClientMailingLocationCity");
   const PolicyClientMailingLocationState = document.querySelector("#PolicyClientMailingLocationState");
+  const PolicyClientMailingLocationOverrideUSPSAddressEditYN = document.querySelector("#PolicyClientMailingLocationOverrideUSPSAddressEditYN");
   const PolicyAutoDataVehicleGaragingAddressYES = document.querySelector('#PolicyAutoDataVehicleGaragingAddressYNY');
   const PolicyAutoDataVehicleGaragingAddressNO = document.querySelector('#PolicyAutoDataVehicleGaragingAddressYNN');
 
@@ -203,6 +246,7 @@ function fillUpPolicyInformation(data) {
   if (!PolicyClientMailingLocationZipCode || !data || !data.length) return;
   if (!PolicyClientMailingLocationCity || !data || !data.length) return;
   if (!PolicyClientMailingLocationState || !data || !data.length) return;
+  if (!PolicyClientMailingLocationOverrideUSPSAddressEditYN || !data || !data.length) return;
   if (!PolicyAutoDataVehicleGaragingAddressYES || !data || !data.length) return;
   if (!PolicyAutoDataVehicleGaragingAddressNO || !data || !data.length) return;
 
@@ -240,6 +284,7 @@ function fillUpPolicyInformation(data) {
   const policyClientMailingLocationZipCode = policyInfo["ZIP Code"];
   const policyClientMailingLocationCity = policyInfo["City"];
   const policyClientMailingLocationState = policyInfo["State"];
+  const policyClientMailingLocationOverrideUSPSAddressEditYN = policyInfo["Override USPS Address Edit?"];
   const policyAutoDataVehicleGaragingAddressYN = policyInfo["All vehicles garaged at mailing address?"];
 
   const policyAutoDataAutoBusinessType = policyInfo["Reason for Policy"];
@@ -398,15 +443,33 @@ function fillUpPolicyInformation(data) {
     } 
   }
 
+  if(!policyClientMailingLocationOverrideUSPSAddressEditYN) {
+    return;
+  } else {
+    const value = policyClientMailingLocationOverrideUSPSAddressEditYN?.trim().toLowerCase();
+    if (value === "y") {
+      PolicyClientMailingLocationOverrideUSPSAddressEditYN.checked = true;
+      PolicyClientMailingLocationOverrideUSPSAddressEditYN.dispatchEvent(new Event("click", { bubbles: true }));
+      PolicyClientMailingLocationOverrideUSPSAddressEditYN.dispatchEvent(new Event("change", { bubbles: true }));
+    } 
+    else if (value === "n") {
+      PolicyClientMailingLocationOverrideUSPSAddressEditYN.checked = false;
+      PolicyClientMailingLocationOverrideUSPSAddressEditYN.dispatchEvent(new Event("click", { bubbles: true }));
+      PolicyClientMailingLocationOverrideUSPSAddressEditYN.dispatchEvent(new Event("change", { bubbles: true }));
+    }
+  }
+
   if (policyAutoDataVehicleGaragingAddressYN) {
     const value = policyAutoDataVehicleGaragingAddressYN?.trim().toLowerCase();
 
     if (value === "y") {
       PolicyAutoDataVehicleGaragingAddressYES.checked = true;
+      PolicyAutoDataVehicleGaragingAddressYES.dispatchEvent(new Event("click", { bubbles: true }));
       PolicyAutoDataVehicleGaragingAddressYES.dispatchEvent(new Event("change", { bubbles: true }));
     } 
     else if (value === "n") {
       PolicyAutoDataVehicleGaragingAddressNO.checked = true;
+      PolicyAutoDataVehicleGaragingAddressNO.dispatchEvent(new Event("click", { bubbles: true }));
       PolicyAutoDataVehicleGaragingAddressNO.dispatchEvent(new Event("change", { bubbles: true }));
     }
   }
@@ -420,14 +483,16 @@ function fillUpPolicyInformation(data) {
         break;
       } 
 
-      if (value === "Carrier Consolidation/Book Transfer") {
+      if (value === "carrier consolidation/book transfer") {
         if (policyAutoDataMultipleCarDiscYN) {
           const value = policyAutoDataMultipleCarDiscYN?.trim().toLowerCase();  
           if (value === "y") {
             PolicyAutoDataMultipleCarDiscYN.checked = true;
+            PolicyAutoDataMultipleCarDiscYN.dispatchEvent(new Event("click", { bubbles: true }));
             PolicyAutoDataMultipleCarDiscYN.dispatchEvent(new Event("change", { bubbles: true }));
           } else if (value === "n") {
             PolicyAutoDataMultipleCarDiscYN.checked = false;
+            PolicyAutoDataMultipleCarDiscYN.dispatchEvent(new Event("click", { bubbles: true }));
             PolicyAutoDataMultipleCarDiscYN.dispatchEvent(new Event("change", { bubbles: true }));
           }
         }
@@ -461,9 +526,11 @@ function fillUpPolicyInformation(data) {
     const value = policyAutoDataNamedNonOwnerYN?.trim().toLowerCase(); 
     if (value === "y") {
       PolicyAutoDataNamedNonOwnerYN.checked = true;
+      PolicyAutoDataNamedNonOwnerYN.dispatchEvent(new Event("click", { bubbles: true }));
       PolicyAutoDataNamedNonOwnerYN.dispatchEvent(new Event("change", { bubbles: true }));
     } else if (value === "n") {
       PolicyAutoDataNamedNonOwnerYN.checked = false;
+      PolicyAutoDataNamedNonOwnerYN.dispatchEvent(new Event("click", { bubbles: true }));
       PolicyAutoDataNamedNonOwnerYN.dispatchEvent(new Event("change", { bubbles: true }));
     }
   }
@@ -497,12 +564,14 @@ function fillUpGaragedLocations(data) {
   const PolicyLocations2AddressLine2 = document.querySelector("#PolicyLocations2AddressLine2");
   const PolicyLocations2ZipCode = document.querySelector("#PolicyLocations2ZipCode");
   const PolicyLocations2City = document.querySelector("#PolicyLocations2City");
+  const PolicyLocations2County = document.querySelector("#PolicyLocations2County");
 
   
   if(!PolicyLocations2AddressLine1 || !data || !data.length) return;
   if(!PolicyLocations2AddressLine2 || !data || !data.length) return;
   if(!PolicyLocations2ZipCode || !data || !data.length) return;
   if(!PolicyLocations2City || !data || !data.length) return;
+  if(!PolicyLocations2County || !data || !data.length) return;
 
 
   // Take the first garaged location in your data
@@ -511,6 +580,7 @@ function fillUpGaragedLocations(data) {
   const addressLine2 = garagedLocation["Address Line 2"];
   const zipCode = garagedLocation["ZIP Code"];
   const city = garagedLocation["City"];
+  const county = garagedLocation["County"];
 
 
   if (!addressLine1) {
@@ -541,9 +611,273 @@ function fillUpGaragedLocations(data) {
     PolicyLocations2City.dispatchEvent(new Event("input", { bubbles: true }));
   }
 
-
-  
+  if (!county) {
+    return;
+  } else {  
+    for (let option of PolicyLocations2County.options) {
+      if (option.text.trim().toLowerCase() ===  county.trim().toLowerCase()) {
+        option.selected = true;
+        PolicyLocations2County.dispatchEvent(new Event("change", { bubbles: true }));
+        break;
+      } 
+    }
+  }
 }
 
+function fillUpDrivers(data) {
+    const PolicyDrivers1PersonSocialSecurityNumberFirstThree = document.querySelector('[name="PolicyDrivers1PersonSocialSecurityNumberFirstThree"]')
+    const PolicyDrivers1PersonSocialSecurityNumberMiddleTwo = document.querySelector('[name="PolicyDrivers1PersonSocialSecurityNumberMiddleTwo"]')
+    const PolicyDrivers1PersonSocialSecurityNumberLastFour = document.querySelector('[name="PolicyDrivers1PersonSocialSecurityNumberLastFour"]')
+    const PolicyDrivers1PersonGender = document.querySelector("#PolicyDrivers1PersonGender");
+    const PolicyDrivers1PersonMaritalStatus = document.querySelector("#PolicyDrivers1PersonMaritalStatus");
+    const PolicyDrivers1LicenseState = document.querySelector("#PolicyDrivers1LicenseState");
+    const PolicyDrivers1FirstAgeLicensed = document.querySelector("#PolicyDrivers1FirstAgeLicensed");
+    const PolicyDrivers1LicenseSuspendedRevokedYNY = document.querySelector('#PolicyDrivers1LicenseSuspendedRevokedYNY');
+    const PolicyDrivers1LicenseSuspendedRevokedYNN = document.querySelector('#PolicyDrivers1LicenseSuspendedRevokedYNN');
+    const PolicyDrivers1AccidentPrevCourseYNY = document.querySelector('#PolicyDrivers1AccidentPrevCourseYNY');
+    const PolicyDrivers1AccidentPrevCourseYNN = document.querySelector('#PolicyDrivers1AccidentPrevCourseYNN');
+
+    if(!PolicyDrivers1PersonSocialSecurityNumberFirstThree || !data || !data.length) return;
+    if(!PolicyDrivers1PersonSocialSecurityNumberMiddleTwo || !data || !data.length) return;
+    if(!PolicyDrivers1PersonSocialSecurityNumberLastFour || !data || !data.length) return;
+    if(!PolicyDrivers1PersonGender || !data || !data.length) return;  
+    if(!PolicyDrivers1PersonMaritalStatus || !data || !data.length) return;
+    if(!PolicyDrivers1LicenseState || !data || !data.length) return;
+    if(!PolicyDrivers1FirstAgeLicensed || !data || !data.length) return;
+    if(!PolicyDrivers1LicenseSuspendedRevokedYNY || !data || !data.length) return;
+    if(!PolicyDrivers1LicenseSuspendedRevokedYNN || !data || !data.length) return;
+    if(!PolicyDrivers1AccidentPrevCourseYNY || !data || !data.length) return;
+    if(!PolicyDrivers1AccidentPrevCourseYNN || !data || !data.length) return;
+
+    // Take the first driver in your data
+    const driverInfo = data[0];
+    const ssn = driverInfo["SSN"];
+    const gender = driverInfo["Gender"];
+    const maritalStatus = driverInfo["Marital Status"];
+    const licenseState = driverInfo["License State"];
+    const firstAgeLicensed = driverInfo["Age when first licensed"];
+    const licenseSuspendedRevokedYN = driverInfo["License been suspended/revoked?"];
+    const accidentPrevCourseYN = driverInfo["Accident Prevention Course"];
+    const accidentPrevCourseDate = driverInfo["Accident Prevention Course Date"];
+
+    const sr22FilingYN = driverInfo["SR-22 Filing"];
+    const sr22FilingDate = driverInfo["SR-22 Filing Date"];
+    const sr22FilingEndDate = driverInfo["SR-22 Filing End Date"];
+    const sr22FilingState = driverInfo["SR-22 Filing State"];
+    const sr22FilingCaseNumber = driverInfo["SR-22 Case Number"];
+
+    const fr44FilingYN = driverInfo["FR-44 Filing"];
+    const fr44FilingDate = driverInfo["FR-44 Filing Date"];
+    const fr44FilingEndDate = driverInfo["FR-44 Filing End Date"];
+    const fr44FilingState = driverInfo["FR-44 Filing State"];
+    const fr44FilingCaseNumber = driverInfo["FR-44 Case Number"];
+    
+    if (!ssn) {
+      return;
+    } else {  
+      const ssnParts = ssn.match(/^(\d{3})-(\d{2})-(\d{4})$/);
+      if (ssnParts) {
+        PolicyDrivers1PersonSocialSecurityNumberFirstThree.value = ssnParts[1];
+        PolicyDrivers1PersonSocialSecurityNumberFirstThree.dispatchEvent(new Event("input", { bubbles: true }));
+        PolicyDrivers1PersonSocialSecurityNumberMiddleTwo.value = ssnParts[2];
+        PolicyDrivers1PersonSocialSecurityNumberMiddleTwo.dispatchEvent(new Event("input", { bubbles: true }));
+        PolicyDrivers1PersonSocialSecurityNumberLastFour.value = ssnParts[3];
+        PolicyDrivers1PersonSocialSecurityNumberLastFour.dispatchEvent(new Event("input", { bubbles: true }));
+      }
+    }
+
+    if (!gender) {
+      return;
+    } else {  
+      for (let option of PolicyDrivers1PersonGender.options) {
+        if (option.text.trim().toLowerCase() ===  gender.trim().toLowerCase()) {
+          option.selected = true;
+          PolicyDrivers1PersonGender.dispatchEvent(new Event("change", { bubbles: true }));
+          break;
+        } 
+      }
+    }
+
+    if (!maritalStatus) {
+      return;
+    } else {  
+      for (let option of PolicyDrivers1PersonMaritalStatus.options) {
+        if (option.text.trim().toLowerCase() ===  maritalStatus.trim().toLowerCase()) {
+          option.selected = true;
+          PolicyDrivers1PersonMaritalStatus.dispatchEvent(new Event("change", { bubbles: true }));
+          break;
+        } 
+      }
+    }
+
+    if (!licenseState) {
+      return;
+    } else {  
+      for (let option of PolicyDrivers1LicenseState.options) {
+        if (option.text.trim().toLowerCase() ===  licenseState.trim().toLowerCase()) {
+          option.selected = true;
+          PolicyDrivers1LicenseState.dispatchEvent(new Event("change", { bubbles: true }));
+          break;
+        } 
+      }
+    }
+    
+    if (!firstAgeLicensed) {
+      return;
+    } else {  
+      PolicyDrivers1FirstAgeLicensed.value = firstAgeLicensed;  
+      PolicyDrivers1FirstAgeLicensed.dispatchEvent(new Event("input", { bubbles: true }));
+    }
+
+    if (licenseSuspendedRevokedYN) {
+      const value = licenseSuspendedRevokedYN?.trim().toLowerCase();
+      if (value === "y") {
+        PolicyDrivers1LicenseSuspendedRevokedYNY.checked = true;
+        PolicyDrivers1LicenseSuspendedRevokedYNY.dispatchEvent(new Event("change", { bubbles: true }));
+      } else if (value === "n") { 
+        PolicyDrivers1LicenseSuspendedRevokedYNN.checked = true;
+        PolicyDrivers1LicenseSuspendedRevokedYNN.dispatchEvent(new Event("change", { bubbles: true }));
+      }
+    }
+
+    if (accidentPrevCourseYN) {
+      const value = accidentPrevCourseYN.trim().toLowerCase();
+
+      if (value === "y") {
+        PolicyDrivers1AccidentPrevCourseYNY.checked = true;
+        PolicyDrivers1AccidentPrevCourseYNY.dispatchEvent(new Event("click", { bubbles: true }));
+        PolicyDrivers1AccidentPrevCourseYNY.dispatchEvent(new Event("change", { bubbles: true }));
+      } else if (value === "n") {
+        PolicyDrivers1AccidentPrevCourseYNN.checked = true;
+        PolicyDrivers1AccidentPrevCourseYNN.dispatchEvent(new Event("click", { bubbles: true }));
+        PolicyDrivers1AccidentPrevCourseYNN.dispatchEvent(new Event("change", { bubbles: true }));
+      }
+
+      if (value === "y" && accidentPrevCourseDate) {
+        const waitForDateField = () => {
+          const dateField = document.querySelector("#PolicyDrivers1AccidentPrevCourseDate");
+          if (dateField) {
+            dateField.value = convertDate(accidentPrevCourseDate);
+            dateField.dispatchEvent(new Event("input", { bubbles: true }));
+          } else {
+            setTimeout(waitForDateField, 100); // try again after 100ms
+          }
+        };
+        waitForDateField();
+      }
+    }
+
+
+    if (sr22FilingYN) {
+      const value = sr22FilingYN?.trim().toLowerCase();
+      if (value === "y") {
+        PolicyDrivers1SR22FilingYNY.checked = true;
+        PolicyDrivers1SR22FilingYNY.dispatchEvent(new Event("click", { bubbles: true }));  
+        PolicyDrivers1SR22FilingYNY.dispatchEvent(new Event("change", { bubbles: true }));  
+      } else if (value === "n") { 
+        PolicyDrivers1SR22FilingYNN.checked = true;
+        PolicyDrivers1SR22FilingYNN.dispatchEvent(new Event("click", { bubbles: true }));
+        PolicyDrivers1SR22FilingYNN.dispatchEvent(new Event("change", { bubbles: true }));
+      }
+
+      if (value === "y" && sr22FilingState) {
+        const waitForSr22Fields = () => { 
+          const SR22FilingYNY = document.querySelector("#PolicyDrivers1SR22FilingYNY");
+          const SR22FilingYNN = document.querySelector("#PolicyDrivers1SR22FilingYNN");
+          const SR22FilingDate = document.querySelector("#PolicyDrivers1SR22FilingDate");
+          const SR22FilingEndDate = document.querySelector("#PolicyDrivers1SR22FilingEndDate");
+          const SR22FilingState = document.querySelector("#PolicyDrivers1SR22FilingState");
+          const SR22FilingCaseNumber = document.querySelector("#PolicyDrivers1SR22FilingCaseNumber");
+
+          if (SR22FilingDate && sr22FilingDate) {
+            SR22FilingDate.value = convertDate(sr22FilingDate);
+            SR22FilingDate.dispatchEvent(new Event("input", { bubbles: true }));
+          }
+
+          if (SR22FilingEndDate && sr22FilingEndDate) {
+            SR22FilingEndDate.value = convertDate(sr22FilingEndDate);
+            SR22FilingEndDate.dispatchEvent(new Event("input", { bubbles: true }));
+          }
+
+          if (SR22FilingState) {
+            for (let option of SR22FilingState.options) {
+              if (option.text.trim().toLowerCase() ===  sr22FilingState.trim().toLowerCase()) {
+                option.selected = true;
+                SR22FilingState.dispatchEvent(new Event("change", { bubbles: true }));
+                break;
+              }
+            }
+          }
+
+          if (SR22FilingCaseNumber && sr22FilingCaseNumber) {
+            SR22FilingCaseNumber.value = sr22FilingCaseNumber;
+            SR22FilingCaseNumber.dispatchEvent(new Event("input", { bubbles: true }));
+          }
+
+          if (!SR22FilingState || !SR22FilingCaseNumber) {
+            setTimeout(waitForSr22Fields, 100); // try again after 100ms
+          }
+        };
+        waitForSr22Fields();
+      }
+    }
+
+    if (fr44FilingYN) {
+      const value = fr44FilingYN?.trim().toLowerCase();
+      if (value === "y") {
+        PolicyDrivers1FR44FilingYNY.checked = true;
+        PolicyDrivers1FR44FilingYNY.dispatchEvent(new Event("click", { bubbles: true }));  
+        PolicyDrivers1FR44FilingYNY.dispatchEvent(new Event("change", { bubbles: true }));  
+      } else if (value === "n") { 
+        PolicyDrivers1FR44FilingYNN.checked = true;
+        PolicyDrivers1FR44FilingYNN.dispatchEvent(new Event("click", { bubbles: true }));
+        PolicyDrivers1FR44FilingYNN.dispatchEvent(new Event("change", { bubbles: true }));
+      }
+
+      if (value === "y" && fr44FilingState) {
+        const waitForFr44Fields = () => { 
+          const FR44FilingYNY = document.querySelector("#PolicyDrivers1FR44FilingYNY");
+          const FR44FilingYNN = document.querySelector("#PolicyDrivers1FR44FilingYNN");
+          const FR44FilingDate = document.querySelector("#PolicyDrivers1FR44FilingDate");
+          const FR44FilingEndDate = document.querySelector("#PolicyDrivers1FR44FilingEndDate");
+          const FR44FilingState = document.querySelector("#PolicyDrivers1FR44FilingState");
+          const FR44FilingCaseNumber = document.querySelector("#PolicyDrivers1FR44FilingCaseNumber");
+
+          if (FR44FilingDate && fr44FilingDate) {
+            FR44FilingDate.value = convertDate(fr44FilingDate);
+            FR44FilingDate.dispatchEvent(new Event("input", { bubbles: true }));
+          }
+
+          if (FR44FilingEndDate && fr44FilingEndDate) {
+            FR44FilingEndDate.value = convertDate(fr44FilingEndDate);
+            FR44FilingEndDate.dispatchEvent(new Event("input", { bubbles: true }));
+          }
+
+          if (FR44FilingState) {
+            for (let option of FR44FilingState.options) {
+              if (option.text.trim().toLowerCase() ===  fr44FilingState.trim().toLowerCase()) {
+                option.selected = true;
+                FR44FilingState.dispatchEvent(new Event("change", { bubbles: true }));
+                break;
+              }
+            }
+          }
+
+          if (FR44FilingCaseNumber && fr44FilingCaseNumber) {
+            FR44FilingCaseNumber.value = fr44FilingCaseNumber;
+            FR44FilingCaseNumber.dispatchEvent(new Event("input", { bubbles: true }));
+          }
+
+          if (!FR44FilingState || !FR44FilingCaseNumber) {
+            setTimeout(waitForFr44Fields, 100); // try again after 100ms
+          }
+        };
+        waitForFr44Fields();
+      }
+    }
+
+}
+
+    
 
 
