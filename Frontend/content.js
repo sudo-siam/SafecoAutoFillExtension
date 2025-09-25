@@ -194,6 +194,7 @@ function fillUpPolicyInformation(data) {
   const PolicyClientMailingLocationZipCode = document.querySelector("#PolicyClientMailingLocationZipCode");
   const PolicyClientMailingLocationCity = document.querySelector("#PolicyClientMailingLocationCity");
   const PolicyClientMailingLocationState = document.querySelector("#PolicyClientMailingLocationState");
+  const PolicyClientMailingLocationOverrideUSPSAddressEditYN = document.querySelector("#PolicyClientMailingLocationOverrideUSPSAddressEditYN");
   const PolicyAutoDataVehicleGaragingAddressYES = document.querySelector('#PolicyAutoDataVehicleGaragingAddressYNY');
   const PolicyAutoDataVehicleGaragingAddressNO = document.querySelector('#PolicyAutoDataVehicleGaragingAddressYNN');
 
@@ -245,6 +246,7 @@ function fillUpPolicyInformation(data) {
   if (!PolicyClientMailingLocationZipCode || !data || !data.length) return;
   if (!PolicyClientMailingLocationCity || !data || !data.length) return;
   if (!PolicyClientMailingLocationState || !data || !data.length) return;
+  if (!PolicyClientMailingLocationOverrideUSPSAddressEditYN || !data || !data.length) return;
   if (!PolicyAutoDataVehicleGaragingAddressYES || !data || !data.length) return;
   if (!PolicyAutoDataVehicleGaragingAddressNO || !data || !data.length) return;
 
@@ -282,6 +284,7 @@ function fillUpPolicyInformation(data) {
   const policyClientMailingLocationZipCode = policyInfo["ZIP Code"];
   const policyClientMailingLocationCity = policyInfo["City"];
   const policyClientMailingLocationState = policyInfo["State"];
+  const policyClientMailingLocationOverrideUSPSAddressEditYN = policyInfo["Override USPS Address Edit?"];
   const policyAutoDataVehicleGaragingAddressYN = policyInfo["All vehicles garaged at mailing address?"];
 
   const policyAutoDataAutoBusinessType = policyInfo["Reason for Policy"];
@@ -440,15 +443,33 @@ function fillUpPolicyInformation(data) {
     } 
   }
 
+  if(!policyClientMailingLocationOverrideUSPSAddressEditYN) {
+    return;
+  } else {
+    const value = policyClientMailingLocationOverrideUSPSAddressEditYN?.trim().toLowerCase();
+    if (value === "y") {
+      PolicyClientMailingLocationOverrideUSPSAddressEditYN.checked = true;
+      PolicyClientMailingLocationOverrideUSPSAddressEditYN.dispatchEvent(new Event("click", { bubbles: true }));
+      PolicyClientMailingLocationOverrideUSPSAddressEditYN.dispatchEvent(new Event("change", { bubbles: true }));
+    } 
+    else if (value === "n") {
+      PolicyClientMailingLocationOverrideUSPSAddressEditYN.checked = false;
+      PolicyClientMailingLocationOverrideUSPSAddressEditYN.dispatchEvent(new Event("click", { bubbles: true }));
+      PolicyClientMailingLocationOverrideUSPSAddressEditYN.dispatchEvent(new Event("change", { bubbles: true }));
+    }
+  }
+
   if (policyAutoDataVehicleGaragingAddressYN) {
     const value = policyAutoDataVehicleGaragingAddressYN?.trim().toLowerCase();
 
     if (value === "y") {
       PolicyAutoDataVehicleGaragingAddressYES.checked = true;
+      PolicyAutoDataVehicleGaragingAddressYES.dispatchEvent(new Event("click", { bubbles: true }));
       PolicyAutoDataVehicleGaragingAddressYES.dispatchEvent(new Event("change", { bubbles: true }));
     } 
     else if (value === "n") {
       PolicyAutoDataVehicleGaragingAddressNO.checked = true;
+      PolicyAutoDataVehicleGaragingAddressNO.dispatchEvent(new Event("click", { bubbles: true }));
       PolicyAutoDataVehicleGaragingAddressNO.dispatchEvent(new Event("change", { bubbles: true }));
     }
   }
@@ -462,14 +483,16 @@ function fillUpPolicyInformation(data) {
         break;
       } 
 
-      if (value === "Carrier Consolidation/Book Transfer") {
+      if (value === "carrier consolidation/book transfer") {
         if (policyAutoDataMultipleCarDiscYN) {
           const value = policyAutoDataMultipleCarDiscYN?.trim().toLowerCase();  
           if (value === "y") {
             PolicyAutoDataMultipleCarDiscYN.checked = true;
+            PolicyAutoDataMultipleCarDiscYN.dispatchEvent(new Event("click", { bubbles: true }));
             PolicyAutoDataMultipleCarDiscYN.dispatchEvent(new Event("change", { bubbles: true }));
           } else if (value === "n") {
             PolicyAutoDataMultipleCarDiscYN.checked = false;
+            PolicyAutoDataMultipleCarDiscYN.dispatchEvent(new Event("click", { bubbles: true }));
             PolicyAutoDataMultipleCarDiscYN.dispatchEvent(new Event("change", { bubbles: true }));
           }
         }
@@ -503,9 +526,11 @@ function fillUpPolicyInformation(data) {
     const value = policyAutoDataNamedNonOwnerYN?.trim().toLowerCase(); 
     if (value === "y") {
       PolicyAutoDataNamedNonOwnerYN.checked = true;
+      PolicyAutoDataNamedNonOwnerYN.dispatchEvent(new Event("click", { bubbles: true }));
       PolicyAutoDataNamedNonOwnerYN.dispatchEvent(new Event("change", { bubbles: true }));
     } else if (value === "n") {
       PolicyAutoDataNamedNonOwnerYN.checked = false;
+      PolicyAutoDataNamedNonOwnerYN.dispatchEvent(new Event("click", { bubbles: true }));
       PolicyAutoDataNamedNonOwnerYN.dispatchEvent(new Event("change", { bubbles: true }));
     }
   }
@@ -539,12 +564,14 @@ function fillUpGaragedLocations(data) {
   const PolicyLocations2AddressLine2 = document.querySelector("#PolicyLocations2AddressLine2");
   const PolicyLocations2ZipCode = document.querySelector("#PolicyLocations2ZipCode");
   const PolicyLocations2City = document.querySelector("#PolicyLocations2City");
+  const PolicyLocations2County = document.querySelector("#PolicyLocations2County");
 
   
   if(!PolicyLocations2AddressLine1 || !data || !data.length) return;
   if(!PolicyLocations2AddressLine2 || !data || !data.length) return;
   if(!PolicyLocations2ZipCode || !data || !data.length) return;
   if(!PolicyLocations2City || !data || !data.length) return;
+  if(!PolicyLocations2County || !data || !data.length) return;
 
 
   // Take the first garaged location in your data
@@ -553,6 +580,7 @@ function fillUpGaragedLocations(data) {
   const addressLine2 = garagedLocation["Address Line 2"];
   const zipCode = garagedLocation["ZIP Code"];
   const city = garagedLocation["City"];
+  const county = garagedLocation["County"];
 
 
   if (!addressLine1) {
@@ -583,8 +611,17 @@ function fillUpGaragedLocations(data) {
     PolicyLocations2City.dispatchEvent(new Event("input", { bubbles: true }));
   }
 
-
-  
+  if (!county) {
+    return;
+  } else {  
+    for (let option of PolicyLocations2County.options) {
+      if (option.text.trim().toLowerCase() ===  county.trim().toLowerCase()) {
+        option.selected = true;
+        PolicyLocations2County.dispatchEvent(new Event("change", { bubbles: true }));
+        break;
+      } 
+    }
+  }
 }
 
 function fillUpDrivers(data) {
