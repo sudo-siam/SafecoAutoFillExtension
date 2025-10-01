@@ -1,92 +1,191 @@
-var SCRIPT_ID = "AKfycbz7Fq8GZDirn_jtVwhAKCHBTETNHKPHAywi3yzjA3Rg28hbR8dKRf74z7U597puHGAE";
+var SCRIPT_ID =
+  "AKfycbz7Fq8GZDirn_jtVwhAKCHBTETNHKPHAywi3yzjA3Rg28hbR8dKRf74z7U597puHGAE";
 const API_URL = "https://script.google.com/macros/s/" + SCRIPT_ID + "/exec";
 
 let data = [];
 
-let currentID = 1;     
+let currentID = 1;
 const maxID = 10;
-let formSection = document.querySelector("td.topSelected").innerText.replace(/\n/g, " ");
+let formSection = document
+  .querySelector("td.topSelected")
+  .innerText.replace(/\n/g, " ");
+let isAutoFillingPolicyInfo = false;
+let isAutoFillingHouseholder = false;
+let isAutoFillingGaragedLoaction = false;
+let isAutoFillingDrivers = false;
+let isAutoFillingVehicle = false;
 
 async function fetchPolicyInformation() {
-
   if (currentID > maxID) {
     console.log("All policies processed.");
     return;
   }
-
+  if(isAutoFillingPolicyInfo) return;
   try {
     console.log("Fetching ID:", currentID);
-    const response = await fetch(`${API_URL}?action=getData&id=${currentID}&sheetname=${encodeURIComponent(formSection)}`);
+    const response = await fetch(
+      `${API_URL}?action=getData&id=${currentID}&sheetname=${encodeURIComponent(
+        formSection
+      )}`
+    );
     console.log(response);
     const json = await response.json();
 
     if (json.status === "success") {
+      isAutoFillingPolicyInfo = true;
       const policyApiData = json.data;
       console.log("Fetched PolicyInformation:", policyApiData);
 
       // Fill the form
-      fillUpPolicyInformation([policyApiData]);
+      setTimeout(() => {
+        fillUpPolicyInformation([policyApiData]);
+      }, 2000);
 
       // Wait for a bit if needed (e.g., for user interaction or animations)
-      await new Promise(res => setTimeout(res, 500)); 
+      await new Promise((res) => setTimeout(res, 500));
     } else {
       console.error("API error:", json.message);
+      isAutoFillingPolicyInfo = false;
     }
   } catch (err) {
     console.error("Fetch error:", err);
+    isAutoFillingPolicyInfo = false;
+  }
+}
+
+async function fetchHouseholdSelections() {
+  if(isAutoFillingHouseholder) return;
+  try {
+    console.log("Fetching ID:", currentID);
+    const response = await fetch(
+      `${API_URL}?action=getData&id=${currentID}&sheetname=${encodeURIComponent(
+        formSection
+      )}`
+    );
+    const json = await response.json();
+    if (json.status === "success") {
+      isAutoFillingHouseholder = false;
+      const householdApiData = json.data;
+      console.log("Fetched House Holders:", householdApiData);
+      // Fill the form
+      setTimeout(() => {
+        fillUpHouseHold([householdApiData]);
+      }, 2000);
+
+      await new Promise((res) => setTimeout(res, 500));
+    } else {
+      console.error("API error:", json.message);
+      isAutoFillingHouseholder = false;
+    }
+  } catch (err) {
+    console.error("Fetch error:", err);
+    isAutoFillingHouseholder = false;
   }
 }
 
 async function fetchGaragedLocations() {
-
+  if(isAutoFillingGaragedLoaction) return;
   try {
     console.log("Fetching ID:", currentID);
-    const response = await fetch(`${API_URL}?action=getData&id=${currentID}&sheetname=${encodeURIComponent(formSection)}`);
-  
+    const response = await fetch(
+      `${API_URL}?action=getData&id=${currentID}&sheetname=${encodeURIComponent(
+        formSection
+      )}`
+    );
+
     const json = await response.json();
     if (json.status === "success") {
+      isAutoFillingGaragedLoaction = false;
       const garagedApiData = json.data;
       console.log("Fetched GaragedLocations:", garagedApiData);
 
-      fillUpGaragedLocations([garagedApiData]);
+      setTimeout(() => {
+        fillUpGaragedLocations([garagedApiData]);
+      }, 2000);
 
       // Wait for a bit if needed (e.g., for user interaction or animations)
-      await new Promise(res => setTimeout(res, 500)); 
+      await new Promise((res) => setTimeout(res, 500));
     } else {
       console.error("API error:", json.message);
+      isAutoFillingGaragedLoaction = false;
     }
   } catch (err) {
     console.error("Fetch error:", err);
+    isAutoFillingGaragedLoaction = false;
   }
 }
 
 async function fetchDrivers() {
-
+  if(isAutoFillingDrivers) return;
   try {
     console.log("Fetching ID:", currentID);
-    const response = await fetch(`${API_URL}?action=getData&id=${currentID}&sheetname=${encodeURIComponent(formSection)}`); 
+    const response = await fetch(
+      `${API_URL}?action=getData&id=${currentID}&sheetname=${encodeURIComponent(
+        formSection
+      )}`
+    );
     const json = await response.json();
     if (json.status === "success") {
+      isAutoFillingDrivers = false;
       const driversApiData = json.data;
-      console.log("Fetched Drivers:", driversApiData);  
+      console.log("Fetched Drivers:", driversApiData);
       // Fill the form
-      fillUpDrivers([driversApiData]);
-      await new Promise(res => setTimeout(res, 500));
+      setTimeout(() => {
+        fillUpDrivers([driversApiData]);
+      }, 2000);
+
+      await new Promise((res) => setTimeout(res, 500));
     } else {
       console.error("API error:", json.message);
+      isAutoFillingDrivers = false;
     }
   } catch (err) {
     console.error("Fetch error:", err);
-  } 
+    isAutoFillingDrivers = false;
+  }
+}
+
+async function fetchVehicles() {
+  if (isAutoFillingVehicle) return;
+  try {
+    console.log("Fetching ID:", currentID);
+    const response = await fetch(
+      `${API_URL}?action=getData&id=${currentID}&sheetname=${encodeURIComponent(
+        formSection
+      )}`
+    );
+    const json = await response.json();
+    if (json.status === "success") {
+      isAutoFillingVehicle = true;
+      const vehicleApiData = json.data;
+      console.log("Fetched Vehicles:", vehicleApiData);
+      // Fill the form
+      setTimeout(() => {
+        fillUpVehicle([vehicleApiData]);
+      }, 2000);
+
+      await new Promise((res) => setTimeout(res, 500));
+    } else {
+      console.error("API error:", json.message);
+      isAutoFillingVehicle = false;
+    }
+  } catch (err) {
+    console.error("Fetch error:", err);
+    isAutoFillingVehicle = false;
+  }
 }
 
 function callAPIForTab(tabName) {
   if (tabName === "Policy Information") {
     fetchPolicyInformation();
+  } else if (tabName === "Household Selections") {
+    fetchHouseholdSelections();
   } else if (tabName === "Garaged Locations") {
     fetchGaragedLocations();
   } else if (tabName === "Drivers") {
     fetchDrivers();
+  } else if (tabName === "Vehicles") {
+    fetchVehicles();
   }
 }
 
@@ -108,7 +207,9 @@ function initTabObserver() {
   });
 
   const tabs = tabContainer.querySelectorAll("td");
-  tabs.forEach(td => observer.observe(td, { attributes: true, attributeFilter: ["class"] }));
+  tabs.forEach((td) =>
+    observer.observe(td, { attributes: true, attributeFilter: ["class"] })
+  );
 
   // Optional: trigger for the initial selected tab
   const initialTab = tabContainer.querySelector("td.topSelected");
@@ -121,7 +222,9 @@ function initTabObserver() {
 initTabObserver();
 
 function clickCloseButton() {
-  const btn = document.querySelector("div.ui-dialog-titlebar a.ui-dialog-titlebar-close");
+  const btn = document.querySelector(
+    "div.ui-dialog-titlebar a.ui-dialog-titlebar-close"
+  );
   if (btn) {
     btn.click();
   } else {
@@ -134,7 +237,7 @@ function clickCloseButton() {
 function splitPhoneNumber(phone) {
   // Use regex to extract area code, prefix, and suffix
   const match = phone.match(/\((\d{3})\)(\d{3})-(\d{4})/);
-  
+
   if (!match) {
     console.error("Invalid phone format:", phone);
     return null;
@@ -143,7 +246,7 @@ function splitPhoneNumber(phone) {
   return {
     areaCode: match[1],
     prefix: match[2],
-    suffix: match[3]
+    suffix: match[3],
   };
 }
 
@@ -172,94 +275,103 @@ function fillUpPolicyInformation(data) {
   const ProducerID = document.querySelector("#PolicyProducerName");
   const PolicyQuoteDate = document.querySelector("#PolicyQuoteDate");
   const PolicyEffectiveDate = document.querySelector("#PolicyEffectiveDate");
-  const PolicyClientAgentCustomerID = document.querySelector("#PolicyClientAgentCustomerID");
-  const PolicyDescriptiveName = document.querySelector("#PolicyDescriptiveName");
+  const PolicyClientAgentCustomerID = document.querySelector(
+    "#PolicyClientAgentCustomerID"
+  );
+  const PolicyDescriptiveName = document.querySelector(
+    "#PolicyDescriptiveName"
+  );
 
   // Named Insured Applicant Information Fields
 
-  const PolicyClientPersonFirstName = document.querySelector("#PolicyClientPersonFirstName");
-  const PolicyClientPersonMiddleName = document.querySelector("#PolicyClientPersonMiddleName");
-  const PolicyClientPersonLastName = document.querySelector("#PolicyClientPersonLastName");
-  const PolicyClientPersonMaritalStatus = document.querySelector("#PolicyClientPersonMaritalStatus");
-  const PolicyClientPersonBirthdate = document.querySelector("#PolicyClientPersonBirthdate");
+  const PolicyClientPersonFirstName = document.querySelector(
+    "#PolicyClientPersonFirstName"
+  );
+  const PolicyClientPersonMiddleName = document.querySelector(
+    "#PolicyClientPersonMiddleName"
+  );
+  const PolicyClientPersonLastName = document.querySelector(
+    "#PolicyClientPersonLastName"
+  );
+  const PolicyClientPersonMaritalStatus = document.querySelector(
+    "#PolicyClientPersonMaritalStatus"
+  );
+  const PolicyClientPersonBirthdate = document.querySelector(
+    "#PolicyClientPersonBirthdate"
+  );
 
-  const PolicyClientHomePhoneNumberAreaCode = document.querySelector('[name="PolicyClientHomePhoneNumberAreaCode"]');
-  const PolicyClientHomePhoneNumberPrefix = document.querySelector('[name="PolicyClientHomePhoneNumberPrefix"]');
-  const PolicyClientHomePhoneNumberSuffix = document.querySelector('[name="PolicyClientHomePhoneNumberSuffix"]');
+  const PolicyClientHomePhoneNumberAreaCode = document.querySelector(
+    '[name="PolicyClientHomePhoneNumberAreaCode"]'
+  );
+  const PolicyClientHomePhoneNumberPrefix = document.querySelector(
+    '[name="PolicyClientHomePhoneNumberPrefix"]'
+  );
+  const PolicyClientHomePhoneNumberSuffix = document.querySelector(
+    '[name="PolicyClientHomePhoneNumberSuffix"]'
+  );
 
-  const PolicyClientEmailAddress = document.querySelector("#PolicyClientEmailAddress");
+  const PolicyClientEmailAddress = document.querySelector(
+    "#PolicyClientEmailAddress"
+  );
 
-  const PolicyClientMailingLocationAddressLine1 = document.querySelector("#PolicyClientMailingLocationAddressLine1");
-  const PolicyClientMailingLocationAddressLine2 = document.querySelector("#PolicyClientMailingLocationAddressLine2");
-  const PolicyClientMailingLocationZipCode = document.querySelector("#PolicyClientMailingLocationZipCode");
-  const PolicyClientMailingLocationCity = document.querySelector("#PolicyClientMailingLocationCity");
-  const PolicyClientMailingLocationState = document.querySelector("#PolicyClientMailingLocationState");
-  const PolicyClientMailingLocationOverrideUSPSAddressEditYN = document.querySelector("#PolicyClientMailingLocationOverrideUSPSAddressEditYN");
-  const PolicyAutoDataVehicleGaragingAddressYES = document.querySelector('#PolicyAutoDataVehicleGaragingAddressYNY');
-  const PolicyAutoDataVehicleGaragingAddressNO = document.querySelector('#PolicyAutoDataVehicleGaragingAddressYNN');
+  const PolicyClientMailingLocationAddressLine1 = document.querySelector(
+    "#PolicyClientMailingLocationAddressLine1"
+  );
+  const PolicyClientMailingLocationAddressLine2 = document.querySelector(
+    "#PolicyClientMailingLocationAddressLine2"
+  );
+  const PolicyClientMailingLocationZipCode = document.querySelector(
+    "#PolicyClientMailingLocationZipCode"
+  );
+  const PolicyClientMailingLocationCity = document.querySelector(
+    "#PolicyClientMailingLocationCity"
+  );
+  const PolicyClientMailingLocationState = document.querySelector(
+    "#PolicyClientMailingLocationState"
+  );
 
+  const PolicyAutoDataVehicleGaragingAddressYES = document.querySelector(
+    "#PolicyAutoDataVehicleGaragingAddressYNY"
+  );
+  const PolicyAutoDataVehicleGaragingAddressNO = document.querySelector(
+    "#PolicyAutoDataVehicleGaragingAddressYNN"
+  );
 
   // Additional Policy Information Fields
 
-  const PolicyAutoDataAutoBusinessType = document.querySelector('#PolicyAutoDataAutoBusinessType');
+  const PolicyAutoDataAutoBusinessType = document.querySelector(
+    "#PolicyAutoDataAutoBusinessType"
+  );
 
-  const PolicyAutoDataAnyIncidentsOnPolicyYNY = document.querySelector('#PolicyAutoDataAnyIncidentsOnPolicyYNY');
-  const PolicyAutoDataAnyIncidentsOnPolicyYNN = document.querySelector('#PolicyAutoDataAnyIncidentsOnPolicyYNN');
+  const PolicyAutoDataAnyIncidentsOnPolicyYNY = document.querySelector(
+    "#PolicyAutoDataAnyIncidentsOnPolicyYNY"
+  );
+  const PolicyAutoDataAnyIncidentsOnPolicyYNN = document.querySelector(
+    "#PolicyAutoDataAnyIncidentsOnPolicyYNN"
+  );
 
-  const PolicyAdditionalInterestsYNY = document.querySelector('#PolicyAdditionalInterestsYNY');
-  const PolicyAdditionalInterestsYNN = document.querySelector('#PolicyAdditionalInterestsYNN');
+  const PolicyAdditionalInterestsYNY = document.querySelector(
+    "#PolicyAdditionalInterestsYNY"
+  );
+  const PolicyAdditionalInterestsYNN = document.querySelector(
+    "#PolicyAdditionalInterestsYNN"
+  );
 
-  const PolicyAutoDataNamedNonOwnerYN = document.querySelector('#PolicyAutoDataNamedNonOwnerYN');
-  const PolicyAutoDataMultipleCarDiscYN = document.querySelector('#PolicyAutoDataMultipleCarDiscYN');
+  const PolicyAutoDataNamedNonOwnerYN = document.querySelector(
+    "#PolicyAutoDataNamedNonOwnerYN"
+  );
+  const PolicyAutoDataMultipleCarDiscYN = document.querySelector(
+    "#PolicyAutoDataMultipleCarDiscYN"
+  );
 
-  const PolicyAutoDataDeliveryVehicleYNY = document.querySelector('#PolicyAutoDataDeliveryVehicleYNY');
-  const PolicyAutoDataDeliveryVehicleYNN = document.querySelector('#PolicyAutoDataDeliveryVehicleYNN');
+  const PolicyAutoDataDeliveryVehicleYNY = document.querySelector(
+    "#PolicyAutoDataDeliveryVehicleYNY"
+  );
+  const PolicyAutoDataDeliveryVehicleYNN = document.querySelector(
+    "#PolicyAutoDataDeliveryVehicleYNN"
+  );
 
-  const PolicyOfferCode = document.querySelector('#PolicyOfferCode');
-
-
-
-
-
-  if (!PolicyRatingState || !data || !data.length) return;
-  if (!ProducerID || !data || !data.length) return;
-  if (!PolicyQuoteDate || !data || !data.length) return;
-  if (!PolicyEffectiveDate || !data || !data.length) return;
-  if (!PolicyClientAgentCustomerID || !data || !data.length) return;
-  if (!PolicyDescriptiveName || !data || !data.length) return;
-
-  if (!PolicyClientPersonFirstName || !data || !data.length) return;
-  if (!PolicyClientPersonMiddleName || !data || !data.length) return;
-  if (!PolicyClientPersonLastName || !data || !data.length) return;
-  if (!PolicyClientPersonMaritalStatus || !data || !data.length) return;
-  if (!PolicyClientPersonBirthdate || !data || !data.length) return;
-  if (!PolicyClientHomePhoneNumberAreaCode || !data || !data.length) return;
-  if (!PolicyClientHomePhoneNumberPrefix || !data || !data.length) return;
-  if (!PolicyClientHomePhoneNumberSuffix || !data || !data.length) return;
-
-  
-  if (!PolicyClientEmailAddress || !data || !data.length) return;
-  
-  
-  if (!PolicyClientMailingLocationAddressLine1 || !data || !data.length) return;
-  if (!PolicyClientMailingLocationAddressLine2 || !data || !data.length) return;
-  if (!PolicyClientMailingLocationZipCode || !data || !data.length) return;
-  if (!PolicyClientMailingLocationCity || !data || !data.length) return;
-  if (!PolicyClientMailingLocationState || !data || !data.length) return;
-  if (!PolicyClientMailingLocationOverrideUSPSAddressEditYN || !data || !data.length) return;
-  if (!PolicyAutoDataVehicleGaragingAddressYES || !data || !data.length) return;
-  if (!PolicyAutoDataVehicleGaragingAddressNO || !data || !data.length) return;
-
-  if (!PolicyAutoDataAutoBusinessType || !data || !data.length) return;
-  if (!PolicyAutoDataAnyIncidentsOnPolicyYNY || !data || !data.length) return;
-  if (!PolicyAutoDataAnyIncidentsOnPolicyYNN || !data || !data.length) return;
-  if (!PolicyAdditionalInterestsYNY || !data || !data.length) return;
-  if (!PolicyAdditionalInterestsYNN || !data || !data.length) return;
-  if (!PolicyAutoDataNamedNonOwnerYN || !data || !data.length) return;
-  if (!PolicyAutoDataMultipleCarDiscYN || !data || !data.length) return;
-  if (!PolicyAutoDataDeliveryVehicleYNY || !data || !data.length) return;
-  if (!PolicyAutoDataDeliveryVehicleYNN || !data || !data.length) return;
-  if (!PolicyOfferCode || !data || !data.length) return;
+  const PolicyOfferCode = document.querySelector("#PolicyOfferCode");
 
   // Take the first policy in your data
   const policyInfo = data[0];
@@ -284,216 +396,226 @@ function fillUpPolicyInformation(data) {
   const policyClientMailingLocationZipCode = policyInfo["ZIP Code"];
   const policyClientMailingLocationCity = policyInfo["City"];
   const policyClientMailingLocationState = policyInfo["State"];
-  const policyClientMailingLocationOverrideUSPSAddressEditYN = policyInfo["Override USPS Address Edit?"];
-  const policyAutoDataVehicleGaragingAddressYN = policyInfo["All vehicles garaged at mailing address?"];
+  const policyAutoDataVehicleGaragingAddressYN =
+    policyInfo["All vehicles garaged at mailing address?"];
 
   const policyAutoDataAutoBusinessType = policyInfo["Reason for Policy"];
-  const policyAutoDataAnyIncidentsOnPolicyYN = policyInfo["Any reportable incidents?"];
+  const policyAutoDataAnyIncidentsOnPolicyYN =
+    policyInfo["Any reportable incidents?"];
   const policyAdditionalInterestsYN = policyInfo["Additional Interests?"];
   const policyAutoDataNamedNonOwnerYN = policyInfo["Named Non-Owner"];
-  const policyAutoDataMultipleCarDiscYN = policyInfo["Advanced Multiple Car Discount"];
-  const policyAutoDataDeliveryVehicleYN = policyInfo["Any vehicles used for delivery?"];
+  const policyAutoDataMultipleCarDiscYN =
+    policyInfo["Advanced Multiple Car Discount"];
+  const policyAutoDataDeliveryVehicleYN =
+    policyInfo["Any vehicles used for delivery?"];
   const policyOfferCode = policyInfo["Priority Code"];
-
 
   if (!ratingState) {
     return;
   } else {
     for (let option of PolicyRatingState.options) {
       // Match by option text (you can also match by value if needed)
-      if (option.text.trim().toLowerCase() === ratingState.trim().toLowerCase()) {
+      if (
+        option.text.trim().toLowerCase() === ratingState.trim().toLowerCase()
+      ) {
         option.selected = true;
         PolicyRatingState.dispatchEvent(new Event("change", { bubbles: true }));
         break;
       }
     }
-  } 
+  }
 
-  if (!producerID) {
-    return;
-  } else {
+  if (producerID) {
     ProducerID.value = producerID;
     ProducerID.dispatchEvent(new Event("input", { bubbles: true }));
   }
 
-  if (!policyQuoteDate) {
-    return;
-  } else {   
+  if (policyQuoteDate) {
     PolicyQuoteDate.value = policyQuoteDate;
     PolicyQuoteDate.dispatchEvent(new Event("input", { bubbles: true }));
   }
 
-  if (!policyEffectiveDate) {
-    return;
-  } else {   
+  if (policyEffectiveDate) {
     PolicyEffectiveDate.value = policyEffectiveDate;
     PolicyEffectiveDate.dispatchEvent(new Event("input", { bubbles: true }));
   }
 
-  if (!policyClientAgentCustomerID) {
-    return;
-  } else {   
+  if (policyClientAgentCustomerID) {
     PolicyClientAgentCustomerID.value = policyClientAgentCustomerID;
-    PolicyClientAgentCustomerID.dispatchEvent(new Event("input", { bubbles: true }));
+    PolicyClientAgentCustomerID.dispatchEvent(
+      new Event("input", { bubbles: true })
+    );
   }
 
-  if (!policyDescriptiveName) {
-    return;
-  } else {  
+  if (policyDescriptiveName) {
     PolicyDescriptiveName.value = policyDescriptiveName;
     PolicyDescriptiveName.dispatchEvent(new Event("input", { bubbles: true }));
   }
-  if (!policyClientPersonFirstName) {
-    return;
-  } else {  
+  if (policyClientPersonFirstName) {
     PolicyClientPersonFirstName.value = policyClientPersonFirstName;
-    PolicyClientPersonFirstName.dispatchEvent(new Event("input", { bubbles: true }));
-  }
-  
-  if (policyClientPersonMiddleName) { 
-    PolicyClientPersonMiddleName.value = policyClientPersonMiddleName;
-    PolicyClientPersonMiddleName.dispatchEvent(new Event("input", { bubbles: true }));
+    PolicyClientPersonFirstName.dispatchEvent(
+      new Event("input", { bubbles: true })
+    );
   }
 
-  if (!policyClientPersonLastName) {
-    return;
-  } else {  
-    PolicyClientPersonLastName.value = policyClientPersonLastName;
-    PolicyClientPersonLastName.dispatchEvent(new Event("input", { bubbles: true }));
+  if (policyClientPersonMiddleName) {
+    PolicyClientPersonMiddleName.value = policyClientPersonMiddleName;
+    PolicyClientPersonMiddleName.dispatchEvent(
+      new Event("input", { bubbles: true })
+    );
   }
-  if (!policyClientPersonMaritalStatus) {
-    return;
-  } else {  
+
+  if (policyClientPersonLastName) {
+    PolicyClientPersonLastName.value = policyClientPersonLastName;
+    PolicyClientPersonLastName.dispatchEvent(
+      new Event("input", { bubbles: true })
+    );
+  }
+
+  if (policyClientPersonMaritalStatus) {
     for (let option of PolicyClientPersonMaritalStatus.options) {
-      // Match by option text (you can also match by value if needed)
-      if (option.text.trim().toLowerCase() === policyClientPersonMaritalStatus.trim().toLowerCase()) {
+      if (
+        option.text.trim().toLowerCase() ===
+        policyClientPersonMaritalStatus.trim().toLowerCase()
+      ) {
         option.selected = true;
-        PolicyClientPersonMaritalStatus.dispatchEvent(new Event("change", { bubbles: true }));
+        PolicyClientPersonMaritalStatus.dispatchEvent(
+          new Event("change", { bubbles: true })
+        );
         break;
       }
     }
   }
 
-  if (!policyClientPersonBirthdate) {
-    return;
-  } else {  
+  if (policyClientPersonBirthdate) {
     PolicyClientPersonBirthdate.value = policyClientPersonBirthdate;
-    PolicyClientPersonBirthdate.dispatchEvent(new Event("input", { bubbles: true }));
+    PolicyClientPersonBirthdate.dispatchEvent(
+      new Event("input", { bubbles: true })
+    );
   }
 
-  if (!primaryPhoneNumber) {
-    return;
-  } else {  
-    const phoneParts = splitPhoneNumber(primaryPhoneNumber);   
+  if (primaryPhoneNumber) {
+    const phoneParts = splitPhoneNumber(primaryPhoneNumber);
     if (phoneParts) {
       PolicyClientHomePhoneNumberAreaCode.value = phoneParts.areaCode;
-      PolicyClientHomePhoneNumberAreaCode.dispatchEvent(new Event("input", { bubbles: true }));
+      PolicyClientHomePhoneNumberAreaCode.dispatchEvent(
+        new Event("input", { bubbles: true })
+      );
       PolicyClientHomePhoneNumberPrefix.value = phoneParts.prefix;
-      PolicyClientHomePhoneNumberPrefix.dispatchEvent(new Event("input", { bubbles: true }));
+      PolicyClientHomePhoneNumberPrefix.dispatchEvent(
+        new Event("input", { bubbles: true })
+      );
       PolicyClientHomePhoneNumberSuffix.value = phoneParts.suffix;
-      PolicyClientHomePhoneNumberSuffix.dispatchEvent(new Event("input", { bubbles: true }));
+      PolicyClientHomePhoneNumberSuffix.dispatchEvent(
+        new Event("input", { bubbles: true })
+      );
     }
   }
 
-  if (!policyClientEmailAddress) {
-    return;
-  } else {  
+  if (policyClientEmailAddress) {
     PolicyClientEmailAddress.value = policyClientEmailAddress;
-    PolicyClientEmailAddress.dispatchEvent(new Event("input", { bubbles: true }));
+    PolicyClientEmailAddress.dispatchEvent(
+      new Event("input", { bubbles: true })
+    );
   }
 
-  if (!policyClientMailingLocationAddressLine1) {
-    return;
-  } else {  
-    PolicyClientMailingLocationAddressLine1.value = policyClientMailingLocationAddressLine1;
-    PolicyClientMailingLocationAddressLine1.dispatchEvent(new Event("input", { bubbles: true }));
-  } 
-
-  if (!policyClientMailingLocationAddressLine2) {
-    return;
-  } else {  
-    PolicyClientMailingLocationAddressLine2.value = policyClientMailingLocationAddressLine2;
-    PolicyClientMailingLocationAddressLine2.dispatchEvent(new Event("input", { bubbles: true }));
+  if (policyClientMailingLocationAddressLine1) {
+    PolicyClientMailingLocationAddressLine1.value =
+      policyClientMailingLocationAddressLine1;
+    PolicyClientMailingLocationAddressLine1.dispatchEvent(
+      new Event("input", { bubbles: true })
+    );
   }
 
-  if (!policyClientMailingLocationZipCode) {
-    return;
-  } else {  
-    PolicyClientMailingLocationZipCode.value = policyClientMailingLocationZipCode;   
-    PolicyClientMailingLocationZipCode.dispatchEvent(new Event("input", { bubbles: true }));
+  if (policyClientMailingLocationAddressLine2) {
+    PolicyClientMailingLocationAddressLine2.value =
+      policyClientMailingLocationAddressLine2;
+    PolicyClientMailingLocationAddressLine2.dispatchEvent(
+      new Event("input", { bubbles: true })
+    );
   }
 
-  if (!policyClientMailingLocationCity) {
-    return;
-  } else {  
-    PolicyClientMailingLocationCity.value = policyClientMailingLocationCity;   
-    PolicyClientMailingLocationCity.dispatchEvent(new Event("input", { bubbles: true }));
+  if (policyClientMailingLocationZipCode) {
+    PolicyClientMailingLocationZipCode.value =
+      policyClientMailingLocationZipCode;
+    PolicyClientMailingLocationZipCode.dispatchEvent(
+      new Event("input", { bubbles: true })
+    );
   }
-  
-  if (!policyClientMailingLocationState) {
-    return;
-  } else {  
+
+  if (policyClientMailingLocationCity) {
+    PolicyClientMailingLocationCity.value = policyClientMailingLocationCity;
+    PolicyClientMailingLocationCity.dispatchEvent(
+      new Event("input", { bubbles: true })
+    );
+  }
+
+  if (policyClientMailingLocationState) {
     for (let option of PolicyClientMailingLocationState.options) {
-      // Match by option text (you can also match by value if needed)
-      if (option.text.trim().toLowerCase() === policyClientMailingLocationState.trim().toLowerCase()) {
+      if (
+        option.text.trim().toLowerCase() ===
+        policyClientMailingLocationState.trim().toLowerCase()
+      ) {
         option.selected = true;
-        PolicyClientMailingLocationState.dispatchEvent(new Event("change", { bubbles: true }));
+        PolicyClientMailingLocationState.dispatchEvent(
+          new Event("change", { bubbles: true })
+        );
         break;
       }
-    } 
-  }
-
-  if(!policyClientMailingLocationOverrideUSPSAddressEditYN) {
-    return;
-  } else {
-    const value = policyClientMailingLocationOverrideUSPSAddressEditYN?.trim().toLowerCase();
-    if (value === "y") {
-      PolicyClientMailingLocationOverrideUSPSAddressEditYN.checked = true;
-      PolicyClientMailingLocationOverrideUSPSAddressEditYN.dispatchEvent(new Event("click", { bubbles: true }));
-      PolicyClientMailingLocationOverrideUSPSAddressEditYN.dispatchEvent(new Event("change", { bubbles: true }));
-    } 
-    else if (value === "n") {
-      PolicyClientMailingLocationOverrideUSPSAddressEditYN.checked = false;
-      PolicyClientMailingLocationOverrideUSPSAddressEditYN.dispatchEvent(new Event("click", { bubbles: true }));
-      PolicyClientMailingLocationOverrideUSPSAddressEditYN.dispatchEvent(new Event("change", { bubbles: true }));
     }
   }
 
   if (policyAutoDataVehicleGaragingAddressYN) {
     const value = policyAutoDataVehicleGaragingAddressYN?.trim().toLowerCase();
-
     if (value === "y") {
       PolicyAutoDataVehicleGaragingAddressYES.checked = true;
-      PolicyAutoDataVehicleGaragingAddressYES.dispatchEvent(new Event("click", { bubbles: true }));
-      PolicyAutoDataVehicleGaragingAddressYES.dispatchEvent(new Event("change", { bubbles: true }));
-    } 
-    else if (value === "n") {
+      PolicyAutoDataVehicleGaragingAddressYES.dispatchEvent(
+        new Event("click", { bubbles: true })
+      );
+      PolicyAutoDataVehicleGaragingAddressYES.dispatchEvent(
+        new Event("change", { bubbles: true })
+      );
+    } else if (value === "n") {
       PolicyAutoDataVehicleGaragingAddressNO.checked = true;
-      PolicyAutoDataVehicleGaragingAddressNO.dispatchEvent(new Event("click", { bubbles: true }));
-      PolicyAutoDataVehicleGaragingAddressNO.dispatchEvent(new Event("change", { bubbles: true }));
+      PolicyAutoDataVehicleGaragingAddressNO.dispatchEvent(
+        new Event("click", { bubbles: true })
+      );
+      PolicyAutoDataVehicleGaragingAddressNO.dispatchEvent(
+        new Event("change", { bubbles: true })
+      );
     }
   }
 
   if (policyAutoDataAutoBusinessType) {
-    const value = policyAutoDataAutoBusinessType?.trim().toLowerCase(); 
+    const value = policyAutoDataAutoBusinessType?.trim().toLowerCase();
     for (let option of PolicyAutoDataAutoBusinessType.options) {
       if (option.text.trim().toLowerCase() === value) {
         option.selected = true;
-        PolicyAutoDataAutoBusinessType.dispatchEvent(new Event("change", { bubbles: true }));
+        PolicyAutoDataAutoBusinessType.dispatchEvent(
+          new Event("change", { bubbles: true })
+        );
         break;
-      } 
+      }
 
       if (value === "carrier consolidation/book transfer") {
         if (policyAutoDataMultipleCarDiscYN) {
-          const value = policyAutoDataMultipleCarDiscYN?.trim().toLowerCase();  
+          const value = policyAutoDataMultipleCarDiscYN?.trim().toLowerCase();
           if (value === "y") {
             PolicyAutoDataMultipleCarDiscYN.checked = true;
-            PolicyAutoDataMultipleCarDiscYN.dispatchEvent(new Event("click", { bubbles: true }));
-            PolicyAutoDataMultipleCarDiscYN.dispatchEvent(new Event("change", { bubbles: true }));
+            PolicyAutoDataMultipleCarDiscYN.dispatchEvent(
+              new Event("click", { bubbles: true })
+            );
+            PolicyAutoDataMultipleCarDiscYN.dispatchEvent(
+              new Event("change", { bubbles: true })
+            );
           } else if (value === "n") {
             PolicyAutoDataMultipleCarDiscYN.checked = false;
-            PolicyAutoDataMultipleCarDiscYN.dispatchEvent(new Event("click", { bubbles: true }));
-            PolicyAutoDataMultipleCarDiscYN.dispatchEvent(new Event("change", { bubbles: true }));
+            PolicyAutoDataMultipleCarDiscYN.dispatchEvent(
+              new Event("click", { bubbles: true })
+            );
+            PolicyAutoDataMultipleCarDiscYN.dispatchEvent(
+              new Event("change", { bubbles: true })
+            );
           }
         }
       }
@@ -501,13 +623,17 @@ function fillUpPolicyInformation(data) {
   }
 
   if (policyAutoDataAnyIncidentsOnPolicyYN) {
-    const value = policyAutoDataAnyIncidentsOnPolicyYN?.trim().toLowerCase(); 
+    const value = policyAutoDataAnyIncidentsOnPolicyYN?.trim().toLowerCase();
     if (value === "y") {
       PolicyAutoDataAnyIncidentsOnPolicyYNY.checked = true;
-      PolicyAutoDataAnyIncidentsOnPolicyYNY.dispatchEvent(new Event("change", { bubbles: true }));
+      PolicyAutoDataAnyIncidentsOnPolicyYNY.dispatchEvent(
+        new Event("change", { bubbles: true })
+      );
     } else if (value === "n") {
       PolicyAutoDataAnyIncidentsOnPolicyYNN.checked = true;
-      PolicyAutoDataAnyIncidentsOnPolicyYNN.dispatchEvent(new Event("change", { bubbles: true }));
+      PolicyAutoDataAnyIncidentsOnPolicyYNN.dispatchEvent(
+        new Event("change", { bubbles: true })
+      );
     }
   }
 
@@ -515,23 +641,35 @@ function fillUpPolicyInformation(data) {
     const value = policyAdditionalInterestsYN?.trim().toLowerCase();
     if (value === "y") {
       PolicyAdditionalInterestsYNY.checked = true;
-      PolicyAdditionalInterestsYNY.dispatchEvent(new Event("change", { bubbles: true }));
+      PolicyAdditionalInterestsYNY.dispatchEvent(
+        new Event("change", { bubbles: true })
+      );
     } else if (value === "n") {
       PolicyAdditionalInterestsYNN.checked = true;
-      PolicyAdditionalInterestsYNN.dispatchEvent(new Event("change", { bubbles: true }));
+      PolicyAdditionalInterestsYNN.dispatchEvent(
+        new Event("change", { bubbles: true })
+      );
     }
   }
 
   if (policyAutoDataNamedNonOwnerYN) {
-    const value = policyAutoDataNamedNonOwnerYN?.trim().toLowerCase(); 
+    const value = policyAutoDataNamedNonOwnerYN?.trim().toLowerCase();
     if (value === "y") {
       PolicyAutoDataNamedNonOwnerYN.checked = true;
-      PolicyAutoDataNamedNonOwnerYN.dispatchEvent(new Event("click", { bubbles: true }));
-      PolicyAutoDataNamedNonOwnerYN.dispatchEvent(new Event("change", { bubbles: true }));
+      PolicyAutoDataNamedNonOwnerYN.dispatchEvent(
+        new Event("click", { bubbles: true })
+      );
+      PolicyAutoDataNamedNonOwnerYN.dispatchEvent(
+        new Event("change", { bubbles: true })
+      );
     } else if (value === "n") {
       PolicyAutoDataNamedNonOwnerYN.checked = false;
-      PolicyAutoDataNamedNonOwnerYN.dispatchEvent(new Event("click", { bubbles: true }));
-      PolicyAutoDataNamedNonOwnerYN.dispatchEvent(new Event("change", { bubbles: true }));
+      PolicyAutoDataNamedNonOwnerYN.dispatchEvent(
+        new Event("click", { bubbles: true })
+      );
+      PolicyAutoDataNamedNonOwnerYN.dispatchEvent(
+        new Event("change", { bubbles: true })
+      );
     }
   }
 
@@ -539,40 +677,67 @@ function fillUpPolicyInformation(data) {
     const value = policyAutoDataDeliveryVehicleYN?.trim().toLowerCase();
     if (value === "y") {
       PolicyAutoDataDeliveryVehicleYNY.checked = true;
-      PolicyAutoDataDeliveryVehicleYNY.dispatchEvent(new Event("change", { bubbles: true }));
+      PolicyAutoDataDeliveryVehicleYNY.dispatchEvent(
+        new Event("change", { bubbles: true })
+      );
     } else if (value === "n") {
       PolicyAutoDataDeliveryVehicleYNN.checked = true;
-      PolicyAutoDataDeliveryVehicleYNN.dispatchEvent(new Event("change", { bubbles: true }));
+      PolicyAutoDataDeliveryVehicleYNN.dispatchEvent(
+        new Event("change", { bubbles: true })
+      );
     }
   }
 
-  if (!policyOfferCode) {
-    return;
-  } else {  
+  if (policyOfferCode) {
     PolicyOfferCode.value = policyOfferCode;
     PolicyOfferCode.dispatchEvent(new Event("input", { bubbles: true }));
   }
-  
 
-  
+  isAutoFillingPolicyInfo = false;
+  clickContinue();
+
   // currentID++;
   // fetchPolicyInformation();
 }
 
+function fillUpHouseHold(data) {
+  const PolicyDriverCandidates2CandidateRelationship = document.querySelector('#PolicyDriverCandidates2CandidateRelationship');
+
+  const householderInfo = data[0];
+  const relationShip = householderInfo['Relationship To Insured'];
+
+  if(relationShip){
+    for (let option of PolicyDriverCandidates2CandidateRelationship.options) {
+      if (
+        normalize(option.text) === normalize(relationShip)
+      ) {
+        option.selected = true;
+        PolicyDriverCandidates2CandidateRelationship.dispatchEvent(
+          new Event("change", { bubbles: true })
+        );
+        break;
+      }
+    }
+  }
+
+  isAutoFillingHouseholder = false;
+  clickContinue();
+}
+
 function fillUpGaragedLocations(data) {
-  const PolicyLocations2AddressLine1 = document.querySelector("#PolicyLocations2AddressLine1");
-  const PolicyLocations2AddressLine2 = document.querySelector("#PolicyLocations2AddressLine2");
-  const PolicyLocations2ZipCode = document.querySelector("#PolicyLocations2ZipCode");
+  const PolicyLocations2AddressLine1 = document.querySelector(
+    "#PolicyLocations2AddressLine1"
+  );
+  const PolicyLocations2AddressLine2 = document.querySelector(
+    "#PolicyLocations2AddressLine2"
+  );
+  const PolicyLocations2ZipCode = document.querySelector(
+    "#PolicyLocations2ZipCode"
+  );
   const PolicyLocations2City = document.querySelector("#PolicyLocations2City");
-  const PolicyLocations2County = document.querySelector("#PolicyLocations2County");
-
-  
-  if(!PolicyLocations2AddressLine1 || !data || !data.length) return;
-  if(!PolicyLocations2AddressLine2 || !data || !data.length) return;
-  if(!PolicyLocations2ZipCode || !data || !data.length) return;
-  if(!PolicyLocations2City || !data || !data.length) return;
-  if(!PolicyLocations2County || !data || !data.length) return;
-
+  const PolicyLocations2County = document.querySelector(
+    "#PolicyLocations2County"
+  );
 
   // Take the first garaged location in your data
   const garagedLocation = data[0];
@@ -582,302 +747,553 @@ function fillUpGaragedLocations(data) {
   const city = garagedLocation["City"];
   const county = garagedLocation["County"];
 
-
   if (!addressLine1) {
     return;
   } else {
     PolicyLocations2AddressLine1.value = addressLine1;
-    PolicyLocations2AddressLine1.dispatchEvent(new Event("input", { bubbles: true }));
+    PolicyLocations2AddressLine1.dispatchEvent(
+      new Event("input", { bubbles: true })
+    );
   }
 
   if (!addressLine2) {
     return;
-  } else {  
+  } else {
     PolicyLocations2AddressLine2.value = addressLine2;
-    PolicyLocations2AddressLine2.dispatchEvent(new Event("input", { bubbles: true }));
+    PolicyLocations2AddressLine2.dispatchEvent(
+      new Event("input", { bubbles: true })
+    );
   }
 
   if (!zipCode) {
     return;
-  } else {  
-    PolicyLocations2ZipCode.value = zipCode;  
-    PolicyLocations2ZipCode.dispatchEvent(new Event("input", { bubbles: true }));
+  } else {
+    PolicyLocations2ZipCode.value = zipCode;
+    PolicyLocations2ZipCode.dispatchEvent(
+      new Event("input", { bubbles: true })
+    );
   }
 
   if (!city) {
     return;
-  } else {  
-    PolicyLocations2City.value = city;  
+  } else {
+    PolicyLocations2City.value = city;
     PolicyLocations2City.dispatchEvent(new Event("input", { bubbles: true }));
   }
 
   if (!county) {
     return;
-  } else {  
+  } else {
     for (let option of PolicyLocations2County.options) {
-      if (option.text.trim().toLowerCase() ===  county.trim().toLowerCase()) {
+      if (option.text.trim().toLowerCase() === county.trim().toLowerCase()) {
         option.selected = true;
-        PolicyLocations2County.dispatchEvent(new Event("change", { bubbles: true }));
+        PolicyLocations2County.dispatchEvent(
+          new Event("change", { bubbles: true })
+        );
         break;
-      } 
+      }
     }
   }
+
+  isAutoFillingGaragedLoaction = false;
+  clickContinue();
+
 }
 
 function fillUpDrivers(data) {
-    const PolicyDrivers1PersonSocialSecurityNumberFirstThree = document.querySelector('[name="PolicyDrivers1PersonSocialSecurityNumberFirstThree"]')
-    const PolicyDrivers1PersonSocialSecurityNumberMiddleTwo = document.querySelector('[name="PolicyDrivers1PersonSocialSecurityNumberMiddleTwo"]')
-    const PolicyDrivers1PersonSocialSecurityNumberLastFour = document.querySelector('[name="PolicyDrivers1PersonSocialSecurityNumberLastFour"]')
-    const PolicyDrivers1PersonGender = document.querySelector("#PolicyDrivers1PersonGender");
-    const PolicyDrivers1PersonMaritalStatus = document.querySelector("#PolicyDrivers1PersonMaritalStatus");
-    const PolicyDrivers1LicenseState = document.querySelector("#PolicyDrivers1LicenseState");
-    const PolicyDrivers1FirstAgeLicensed = document.querySelector("#PolicyDrivers1FirstAgeLicensed");
-    const PolicyDrivers1LicenseSuspendedRevokedYNY = document.querySelector('#PolicyDrivers1LicenseSuspendedRevokedYNY');
-    const PolicyDrivers1LicenseSuspendedRevokedYNN = document.querySelector('#PolicyDrivers1LicenseSuspendedRevokedYNN');
-    const PolicyDrivers1AccidentPrevCourseYNY = document.querySelector('#PolicyDrivers1AccidentPrevCourseYNY');
-    const PolicyDrivers1AccidentPrevCourseYNN = document.querySelector('#PolicyDrivers1AccidentPrevCourseYNN');
+  const PolicyDrivers1PersonSocialSecurityNumberFirstThree =
+    document.querySelector(
+      '[name="PolicyDrivers1PersonSocialSecurityNumberFirstThree"]'
+    );
+  const PolicyDrivers1PersonSocialSecurityNumberMiddleTwo =
+    document.querySelector(
+      '[name="PolicyDrivers1PersonSocialSecurityNumberMiddleTwo"]'
+    );
+  const PolicyDrivers1PersonSocialSecurityNumberLastFour =
+    document.querySelector(
+      '[name="PolicyDrivers1PersonSocialSecurityNumberLastFour"]'
+    );
+  const PolicyDrivers1PersonGender = document.querySelector(
+    "#PolicyDrivers1PersonGender"
+  );
+  const PolicyDrivers1PersonMaritalStatus = document.querySelector(
+    "#PolicyDrivers1PersonMaritalStatus"
+  );
+  const PolicyDrivers1LicenseState = document.querySelector(
+    "#PolicyDrivers1LicenseState"
+  );
+  const PolicyDrivers1FirstAgeLicensed = document.querySelector(
+    "#PolicyDrivers1FirstAgeLicensed"
+  );
+  const PolicyDrivers1LicenseSuspendedRevokedYNY = document.querySelector(
+    "#PolicyDrivers1LicenseSuspendedRevokedYNY"
+  );
+  const PolicyDrivers1LicenseSuspendedRevokedYNN = document.querySelector(
+    "#PolicyDrivers1LicenseSuspendedRevokedYNN"
+  );
+  const PolicyDrivers1AccidentPrevCourseYNY = document.querySelector(
+    "#PolicyDrivers1AccidentPrevCourseYNY"
+  );
+  const PolicyDrivers1AccidentPrevCourseYNN = document.querySelector(
+    "#PolicyDrivers1AccidentPrevCourseYNN"
+  );
 
-    if(!PolicyDrivers1PersonSocialSecurityNumberFirstThree || !data || !data.length) return;
-    if(!PolicyDrivers1PersonSocialSecurityNumberMiddleTwo || !data || !data.length) return;
-    if(!PolicyDrivers1PersonSocialSecurityNumberLastFour || !data || !data.length) return;
-    if(!PolicyDrivers1PersonGender || !data || !data.length) return;  
-    if(!PolicyDrivers1PersonMaritalStatus || !data || !data.length) return;
-    if(!PolicyDrivers1LicenseState || !data || !data.length) return;
-    if(!PolicyDrivers1FirstAgeLicensed || !data || !data.length) return;
-    if(!PolicyDrivers1LicenseSuspendedRevokedYNY || !data || !data.length) return;
-    if(!PolicyDrivers1LicenseSuspendedRevokedYNN || !data || !data.length) return;
-    if(!PolicyDrivers1AccidentPrevCourseYNY || !data || !data.length) return;
-    if(!PolicyDrivers1AccidentPrevCourseYNN || !data || !data.length) return;
+  // Take the first driver in your data
+  const driverInfo = data[0];
+  const ssn = driverInfo["SSN"];
+  const gender = driverInfo["Gender"];
+  const maritalStatus = driverInfo["Marital Status"];
+  const licenseState = driverInfo["License State"];
+  const firstAgeLicensed = driverInfo["Age when first licensed"];
+  const licenseSuspendedRevokedYN =
+    driverInfo["License been suspended/revoked?"];
+  const accidentPrevCourseYN = driverInfo["Accident Prevention Course"];
+  const accidentPrevCourseDate = driverInfo["Accident Prevention Course Date"];
 
-    // Take the first driver in your data
-    const driverInfo = data[0];
-    const ssn = driverInfo["SSN"];
-    const gender = driverInfo["Gender"];
-    const maritalStatus = driverInfo["Marital Status"];
-    const licenseState = driverInfo["License State"];
-    const firstAgeLicensed = driverInfo["Age when first licensed"];
-    const licenseSuspendedRevokedYN = driverInfo["License been suspended/revoked?"];
-    const accidentPrevCourseYN = driverInfo["Accident Prevention Course"];
-    const accidentPrevCourseDate = driverInfo["Accident Prevention Course Date"];
+  const sr22FilingYN = driverInfo["SR-22 Filing"];
+  const sr22FilingDate = driverInfo["SR-22 Filing Date"];
+  const sr22FilingEndDate = driverInfo["SR-22 Filing End Date"];
+  const sr22FilingState = driverInfo["SR-22 Filing State"];
+  const sr22FilingCaseNumber = driverInfo["SR-22 Case Number"];
 
-    const sr22FilingYN = driverInfo["SR-22 Filing"];
-    const sr22FilingDate = driverInfo["SR-22 Filing Date"];
-    const sr22FilingEndDate = driverInfo["SR-22 Filing End Date"];
-    const sr22FilingState = driverInfo["SR-22 Filing State"];
-    const sr22FilingCaseNumber = driverInfo["SR-22 Case Number"];
+  const fr44FilingYN = driverInfo["FR-44 Filing"];
+  const fr44FilingDate = driverInfo["FR-44 Filing Date"];
+  const fr44FilingEndDate = driverInfo["FR-44 Filing End Date"];
+  const fr44FilingState = driverInfo["FR-44 Filing State"];
+  const fr44FilingCaseNumber = driverInfo["FR-44 Case Number"];
 
-    const fr44FilingYN = driverInfo["FR-44 Filing"];
-    const fr44FilingDate = driverInfo["FR-44 Filing Date"];
-    const fr44FilingEndDate = driverInfo["FR-44 Filing End Date"];
-    const fr44FilingState = driverInfo["FR-44 Filing State"];
-    const fr44FilingCaseNumber = driverInfo["FR-44 Case Number"];
-    
-    if (!ssn) {
-      return;
-    } else {  
-      const ssnParts = ssn.match(/^(\d{3})-(\d{2})-(\d{4})$/);
-      if (ssnParts) {
-        PolicyDrivers1PersonSocialSecurityNumberFirstThree.value = ssnParts[1];
-        PolicyDrivers1PersonSocialSecurityNumberFirstThree.dispatchEvent(new Event("input", { bubbles: true }));
-        PolicyDrivers1PersonSocialSecurityNumberMiddleTwo.value = ssnParts[2];
-        PolicyDrivers1PersonSocialSecurityNumberMiddleTwo.dispatchEvent(new Event("input", { bubbles: true }));
-        PolicyDrivers1PersonSocialSecurityNumberLastFour.value = ssnParts[3];
-        PolicyDrivers1PersonSocialSecurityNumberLastFour.dispatchEvent(new Event("input", { bubbles: true }));
+  if (ssn) {
+    const ssnParts = ssn.match(/^(\d{3})-(\d{2})-(\d{4})$/);
+    if (ssnParts) {
+      PolicyDrivers1PersonSocialSecurityNumberFirstThree.value = ssnParts[1];
+      PolicyDrivers1PersonSocialSecurityNumberFirstThree.dispatchEvent(
+        new Event("input", { bubbles: true })
+      );
+      PolicyDrivers1PersonSocialSecurityNumberMiddleTwo.value = ssnParts[2];
+      PolicyDrivers1PersonSocialSecurityNumberMiddleTwo.dispatchEvent(
+        new Event("input", { bubbles: true })
+      );
+      PolicyDrivers1PersonSocialSecurityNumberLastFour.value = ssnParts[3];
+      PolicyDrivers1PersonSocialSecurityNumberLastFour.dispatchEvent(
+        new Event("input", { bubbles: true })
+      );
+    }
+  }
+
+  if (gender) {
+    for (let option of PolicyDrivers1PersonGender.options) {
+      if (option.text.trim().toLowerCase() === gender.trim().toLowerCase()) {
+        option.selected = true;
+        PolicyDrivers1PersonGender.dispatchEvent(
+          new Event("change", { bubbles: true })
+        );
+        break;
       }
     }
+  }
 
-    if (!gender) {
-      return;
-    } else {  
-      for (let option of PolicyDrivers1PersonGender.options) {
-        if (option.text.trim().toLowerCase() ===  gender.trim().toLowerCase()) {
-          option.selected = true;
-          PolicyDrivers1PersonGender.dispatchEvent(new Event("change", { bubbles: true }));
-          break;
-        } 
+  if (maritalStatus) {
+    for (let option of PolicyDrivers1PersonMaritalStatus.options) {
+      if (
+        option.text.trim().toLowerCase() === maritalStatus.trim().toLowerCase()
+      ) {
+        option.selected = true;
+        PolicyDrivers1PersonMaritalStatus.dispatchEvent(
+          new Event("change", { bubbles: true })
+        );
+        break;
       }
     }
+  }
 
-    if (!maritalStatus) {
-      return;
-    } else {  
-      for (let option of PolicyDrivers1PersonMaritalStatus.options) {
-        if (option.text.trim().toLowerCase() ===  maritalStatus.trim().toLowerCase()) {
-          option.selected = true;
-          PolicyDrivers1PersonMaritalStatus.dispatchEvent(new Event("change", { bubbles: true }));
-          break;
-        } 
+  if (licenseState) {
+    for (let option of PolicyDrivers1LicenseState.options) {
+      if (
+        option.text.trim().toLowerCase() === licenseState.trim().toLowerCase()
+      ) {
+        option.selected = true;
+        PolicyDrivers1LicenseState.dispatchEvent(
+          new Event("change", { bubbles: true })
+        );
+        break;
       }
     }
+  }
 
-    if (!licenseState) {
-      return;
-    } else {  
-      for (let option of PolicyDrivers1LicenseState.options) {
-        if (option.text.trim().toLowerCase() ===  licenseState.trim().toLowerCase()) {
-          option.selected = true;
-          PolicyDrivers1LicenseState.dispatchEvent(new Event("change", { bubbles: true }));
-          break;
-        } 
-      }
+  if (firstAgeLicensed) {
+    PolicyDrivers1FirstAgeLicensed.value = firstAgeLicensed;
+    PolicyDrivers1FirstAgeLicensed.dispatchEvent(
+      new Event("input", { bubbles: true })
+    );
+  }
+
+  if (licenseSuspendedRevokedYN) {
+    const value = licenseSuspendedRevokedYN?.trim().toLowerCase();
+    if (value === "y") {
+      PolicyDrivers1LicenseSuspendedRevokedYNY.checked = true;
+      PolicyDrivers1LicenseSuspendedRevokedYNY.dispatchEvent(
+        new Event("change", { bubbles: true })
+      );
+    } else if (value === "n") {
+      PolicyDrivers1LicenseSuspendedRevokedYNN.checked = true;
+      PolicyDrivers1LicenseSuspendedRevokedYNN.dispatchEvent(
+        new Event("change", { bubbles: true })
+      );
     }
-    
-    if (!firstAgeLicensed) {
-      return;
-    } else {  
-      PolicyDrivers1FirstAgeLicensed.value = firstAgeLicensed;  
-      PolicyDrivers1FirstAgeLicensed.dispatchEvent(new Event("input", { bubbles: true }));
-    }
+  }
 
-    if (licenseSuspendedRevokedYN) {
-      const value = licenseSuspendedRevokedYN?.trim().toLowerCase();
-      if (value === "y") {
-        PolicyDrivers1LicenseSuspendedRevokedYNY.checked = true;
-        PolicyDrivers1LicenseSuspendedRevokedYNY.dispatchEvent(new Event("change", { bubbles: true }));
-      } else if (value === "n") { 
-        PolicyDrivers1LicenseSuspendedRevokedYNN.checked = true;
-        PolicyDrivers1LicenseSuspendedRevokedYNN.dispatchEvent(new Event("change", { bubbles: true }));
-      }
-    }
-
-    if (accidentPrevCourseYN) {
-      const value = accidentPrevCourseYN.trim().toLowerCase();
-
-      if (value === "y") {
-        PolicyDrivers1AccidentPrevCourseYNY.checked = true;
-        PolicyDrivers1AccidentPrevCourseYNY.dispatchEvent(new Event("click", { bubbles: true }));
-        PolicyDrivers1AccidentPrevCourseYNY.dispatchEvent(new Event("change", { bubbles: true }));
-      } else if (value === "n") {
-        PolicyDrivers1AccidentPrevCourseYNN.checked = true;
-        PolicyDrivers1AccidentPrevCourseYNN.dispatchEvent(new Event("click", { bubbles: true }));
-        PolicyDrivers1AccidentPrevCourseYNN.dispatchEvent(new Event("change", { bubbles: true }));
-      }
-
-      if (value === "y" && accidentPrevCourseDate) {
-        const waitForDateField = () => {
-          const dateField = document.querySelector("#PolicyDrivers1AccidentPrevCourseDate");
-          if (dateField) {
-            dateField.value = convertDate(accidentPrevCourseDate);
-            dateField.dispatchEvent(new Event("input", { bubbles: true }));
-          } else {
-            setTimeout(waitForDateField, 100); // try again after 100ms
-          }
-        };
-        waitForDateField();
-      }
+  if (accidentPrevCourseYN) {
+    const value = accidentPrevCourseYN.trim().toLowerCase();
+    if (value === "y") {
+      PolicyDrivers1AccidentPrevCourseYNY.checked = true;
+      PolicyDrivers1AccidentPrevCourseYNY.dispatchEvent(
+        new Event("click", { bubbles: true })
+      );
+      PolicyDrivers1AccidentPrevCourseYNY.dispatchEvent(
+        new Event("change", { bubbles: true })
+      );
+    } else if (value === "n") {
+      PolicyDrivers1AccidentPrevCourseYNN.checked = true;
+      PolicyDrivers1AccidentPrevCourseYNN.dispatchEvent(
+        new Event("click", { bubbles: true })
+      );
+      PolicyDrivers1AccidentPrevCourseYNN.dispatchEvent(
+        new Event("change", { bubbles: true })
+      );
     }
 
+    if (value === "y" && accidentPrevCourseDate) {
+      const waitForDateField = () => {
+        const dateField = document.querySelector(
+          "#PolicyDrivers1AccidentPrevCourseDate"
+        );
+        if (dateField) {
+          dateField.value = convertDate(accidentPrevCourseDate);
+          dateField.dispatchEvent(new Event("input", { bubbles: true }));
+        } else {
+          setTimeout(waitForDateField, 100); // try again after 100ms
+        }
+      };
+      waitForDateField();
+    }
+  }
 
-    if (sr22FilingYN) {
-      const value = sr22FilingYN?.trim().toLowerCase();
-      if (value === "y") {
-        PolicyDrivers1SR22FilingYNY.checked = true;
-        PolicyDrivers1SR22FilingYNY.dispatchEvent(new Event("click", { bubbles: true }));  
-        PolicyDrivers1SR22FilingYNY.dispatchEvent(new Event("change", { bubbles: true }));  
-      } else if (value === "n") { 
-        PolicyDrivers1SR22FilingYNN.checked = true;
-        PolicyDrivers1SR22FilingYNN.dispatchEvent(new Event("click", { bubbles: true }));
-        PolicyDrivers1SR22FilingYNN.dispatchEvent(new Event("change", { bubbles: true }));
-      }
+  if (sr22FilingYN) {
+    const value = sr22FilingYN?.trim().toLowerCase();
+    const SR22FilingYNY = document.querySelector(
+      "#PolicyDrivers1SR22FilingYNY"
+    );
+    const SR22FilingYNN = document.querySelector(
+      "#PolicyDrivers1SR22FilingYNN"
+    );
+    const SR22FilingDate = document.querySelector(
+      "#PolicyDrivers1SR22FilingDate"
+    );
+    const SR22FilingEndDate = document.querySelector(
+      "#PolicyDrivers1SR22FilingEndDate"
+    );
+    const SR22FilingState = document.querySelector(
+      "#PolicyDrivers1SR22FilingState"
+    );
+    const SR22FilingCaseNumber = document.querySelector(
+      "#PolicyDrivers1SR22FilingCaseNumber"
+    );
 
-      if (value === "y" && sr22FilingState) {
-        const waitForSr22Fields = () => { 
-          const SR22FilingYNY = document.querySelector("#PolicyDrivers1SR22FilingYNY");
-          const SR22FilingYNN = document.querySelector("#PolicyDrivers1SR22FilingYNN");
-          const SR22FilingDate = document.querySelector("#PolicyDrivers1SR22FilingDate");
-          const SR22FilingEndDate = document.querySelector("#PolicyDrivers1SR22FilingEndDate");
-          const SR22FilingState = document.querySelector("#PolicyDrivers1SR22FilingState");
-          const SR22FilingCaseNumber = document.querySelector("#PolicyDrivers1SR22FilingCaseNumber");
-
-          if (SR22FilingDate && sr22FilingDate) {
-            SR22FilingDate.value = convertDate(sr22FilingDate);
-            SR22FilingDate.dispatchEvent(new Event("input", { bubbles: true }));
-          }
-
-          if (SR22FilingEndDate && sr22FilingEndDate) {
-            SR22FilingEndDate.value = convertDate(sr22FilingEndDate);
-            SR22FilingEndDate.dispatchEvent(new Event("input", { bubbles: true }));
-          }
-
-          if (SR22FilingState) {
-            for (let option of SR22FilingState.options) {
-              if (option.text.trim().toLowerCase() ===  sr22FilingState.trim().toLowerCase()) {
-                option.selected = true;
-                SR22FilingState.dispatchEvent(new Event("change", { bubbles: true }));
-                break;
-              }
-            }
-          }
-
-          if (SR22FilingCaseNumber && sr22FilingCaseNumber) {
-            SR22FilingCaseNumber.value = sr22FilingCaseNumber;
-            SR22FilingCaseNumber.dispatchEvent(new Event("input", { bubbles: true }));
-          }
-
-          if (!SR22FilingState || !SR22FilingCaseNumber) {
-            setTimeout(waitForSr22Fields, 100); // try again after 100ms
-          }
-        };
-        waitForSr22Fields();
-      }
+    if (value === "y" && SR22FilingYNY) {
+      SR22FilingYNY.checked = true;
+      SR22FilingYNY.dispatchEvent(new Event("click", { bubbles: true }));
+      SR22FilingYNY.dispatchEvent(new Event("change", { bubbles: true }));
+    } else if (value === "n" && SR22FilingYNN) {
+      SR22FilingYNN.checked = true;
+      SR22FilingYNN.dispatchEvent(new Event("click", { bubbles: true }));
+      SR22FilingYNN.dispatchEvent(new Event("change", { bubbles: true }));
     }
 
-    if (fr44FilingYN) {
-      const value = fr44FilingYN?.trim().toLowerCase();
-      if (value === "y") {
-        PolicyDrivers1FR44FilingYNY.checked = true;
-        PolicyDrivers1FR44FilingYNY.dispatchEvent(new Event("click", { bubbles: true }));  
-        PolicyDrivers1FR44FilingYNY.dispatchEvent(new Event("change", { bubbles: true }));  
-      } else if (value === "n") { 
-        PolicyDrivers1FR44FilingYNN.checked = true;
-        PolicyDrivers1FR44FilingYNN.dispatchEvent(new Event("click", { bubbles: true }));
-        PolicyDrivers1FR44FilingYNN.dispatchEvent(new Event("change", { bubbles: true }));
+    if (value === "y" && sr22FilingState) {
+      if (SR22FilingDate && sr22FilingDate) {
+        SR22FilingDate.value = convertDate(sr22FilingDate);
+        SR22FilingDate.dispatchEvent(new Event("input", { bubbles: true }));
       }
 
-      if (value === "y" && fr44FilingState) {
-        const waitForFr44Fields = () => { 
-          const FR44FilingYNY = document.querySelector("#PolicyDrivers1FR44FilingYNY");
-          const FR44FilingYNN = document.querySelector("#PolicyDrivers1FR44FilingYNN");
-          const FR44FilingDate = document.querySelector("#PolicyDrivers1FR44FilingDate");
-          const FR44FilingEndDate = document.querySelector("#PolicyDrivers1FR44FilingEndDate");
-          const FR44FilingState = document.querySelector("#PolicyDrivers1FR44FilingState");
-          const FR44FilingCaseNumber = document.querySelector("#PolicyDrivers1FR44FilingCaseNumber");
+      if (SR22FilingEndDate && sr22FilingEndDate) {
+        SR22FilingEndDate.value = convertDate(sr22FilingEndDate);
+        SR22FilingEndDate.dispatchEvent(new Event("input", { bubbles: true }));
+      }
 
-          if (FR44FilingDate && fr44FilingDate) {
-            FR44FilingDate.value = convertDate(fr44FilingDate);
-            FR44FilingDate.dispatchEvent(new Event("input", { bubbles: true }));
+      if (SR22FilingState) {
+        for (let option of SR22FilingState.options) {
+          if (
+            option.text.trim().toLowerCase() ===
+            sr22FilingState.trim().toLowerCase()
+          ) {
+            option.selected = true;
+            SR22FilingState.dispatchEvent(
+              new Event("change", { bubbles: true })
+            );
+            break;
           }
+        }
+      }
 
-          if (FR44FilingEndDate && fr44FilingEndDate) {
-            FR44FilingEndDate.value = convertDate(fr44FilingEndDate);
-            FR44FilingEndDate.dispatchEvent(new Event("input", { bubbles: true }));
-          }
+      if (SR22FilingCaseNumber && sr22FilingCaseNumber) {
+        SR22FilingCaseNumber.value = sr22FilingCaseNumber;
+        SR22FilingCaseNumber.dispatchEvent(
+          new Event("input", { bubbles: true })
+        );
+      }
 
-          if (FR44FilingState) {
-            for (let option of FR44FilingState.options) {
-              if (option.text.trim().toLowerCase() ===  fr44FilingState.trim().toLowerCase()) {
-                option.selected = true;
-                FR44FilingState.dispatchEvent(new Event("change", { bubbles: true }));
-                break;
-              }
-            }
-          }
-
-          if (FR44FilingCaseNumber && fr44FilingCaseNumber) {
-            FR44FilingCaseNumber.value = fr44FilingCaseNumber;
-            FR44FilingCaseNumber.dispatchEvent(new Event("input", { bubbles: true }));
-          }
-
-          if (!FR44FilingState || !FR44FilingCaseNumber) {
-            setTimeout(waitForFr44Fields, 100); // try again after 100ms
-          }
-        };
-        waitForFr44Fields();
+      if (!SR22FilingState || !SR22FilingCaseNumber) {
+        setTimeout(waitForSr22Fields, 100); // try again after 100ms
       }
     }
+  }
+
+  if (fr44FilingYN) {
+    const value = fr44FilingYN?.trim().toLowerCase();
+    const FR44FilingYNY = document.querySelector(
+      "#PolicyDrivers1FR44FilingYNY"
+    );
+    const FR44FilingYNN = document.querySelector(
+      "#PolicyDrivers1FR44FilingYNN"
+    );
+    const FR44FilingDate = document.querySelector(
+      "#PolicyDrivers1FR44FilingDate"
+    );
+    const FR44FilingEndDate = document.querySelector(
+      "#PolicyDrivers1FR44FilingEndDate"
+    );
+    const FR44FilingState = document.querySelector(
+      "#PolicyDrivers1FR44FilingState"
+    );
+    const FR44FilingCaseNumber = document.querySelector(
+      "#PolicyDrivers1FR44FilingCaseNumber"
+    );
+
+    if (value === "y" && FR44FilingYNY) {
+      FR44FilingYNY.checked = true;
+      FR44FilingYNY.dispatchEvent(new Event("click", { bubbles: true }));
+      FR44FilingYNY.dispatchEvent(new Event("change", { bubbles: true }));
+    } else if (value === "n" && FR44FilingYNN) {
+      FR44FilingYNN.checked = true;
+      FR44FilingYNN.dispatchEvent(new Event("click", { bubbles: true }));
+      FR44FilingYNN.dispatchEvent(new Event("change", { bubbles: true }));
+    }
+
+    if (value === "y" && fr44FilingState) {
+      if (FR44FilingDate && fr44FilingDate) {
+        FR44FilingDate.value = convertDate(fr44FilingDate);
+        FR44FilingDate.dispatchEvent(new Event("input", { bubbles: true }));
+      }
+
+      if (FR44FilingEndDate && fr44FilingEndDate) {
+        FR44FilingEndDate.value = convertDate(fr44FilingEndDate);
+        FR44FilingEndDate.dispatchEvent(new Event("input", { bubbles: true }));
+      }
+
+      if (FR44FilingState) {
+        for (let option of FR44FilingState.options) {
+          if (
+            option.text.trim().toLowerCase() ===
+            fr44FilingState.trim().toLowerCase()
+          ) {
+            option.selected = true;
+            FR44FilingState.dispatchEvent(
+              new Event("change", { bubbles: true })
+            );
+            break;
+          }
+        }
+      }
+
+      if (FR44FilingCaseNumber && fr44FilingCaseNumber) {
+        FR44FilingCaseNumber.value = fr44FilingCaseNumber;
+        FR44FilingCaseNumber.dispatchEvent(
+          new Event("input", { bubbles: true })
+        );
+      }
+
+      if (!FR44FilingState || !FR44FilingCaseNumber) {
+        setTimeout(waitForFr44Fields, 100); // try again after 100ms
+      }
+    }
+  }
+
+  isAutoFillingDrivers = false;
+  clickContinue();
 
 }
 
-    
+function fillUpVehicle(data) {
+  const RecVehicleYNY = document.querySelector("#PolicyVehicles1RecVehicleYNY");
+  const RecVehicleYNN = document.querySelector("#PolicyVehicles1RecVehicleYNN");
+  const VINKnownYNY = document.querySelector("#PolicyVehicles1VINKnownYNY");
+  const VINKnownYNN = document.querySelector("#PolicyVehicles1VINKnownYNN");
+  const Vehicles1Use = document.querySelector("#PolicyVehicles1Use");
+  const Vehicles1OwnershipType = document.querySelector(
+    "#PolicyVehicles1OwnershipType"
+  );
+  const Vehicles1AnnualMiles = document.querySelector(
+    "#PolicyVehicles1AnnualMiles"
+  );
+  const Vehicles1CorporateOwnedYN = document.querySelector(
+    "#PolicyVehicles1CorporateOwnedYN"
+  );
+  const Vehicles1YearsVehicleOwned = document.querySelector(
+    "#PolicyVehicles1YearsVehicleOwned"
+  );
+  const Vehicles1RideshareDeliveryYNY = document.querySelector(
+    "#PolicyVehicles1RideshareDeliveryYNY"
+  );
+  const Vehicles1RideshareDeliveryYNN = document.querySelector(
+    "#PolicyVehicles1RideshareDeliveryYNN"
+  );
 
+  const vehicleInfo = data[0];
+  const recVehicle = vehicleInfo["Recreational Vehicle"];
+  const vinIsKnown = vehicleInfo['Vehicle VIN is known'];
+  const vin = vehicleInfo["VIN"];
+  const vehicleUse = vehicleInfo["Vehicle Use"];
+  const ownershipType = vehicleInfo["Ownership Type"];
+  const annualMiles = vehicleInfo["Annual Miles"];
+  const corporateOwned = vehicleInfo["Corporate Owned"];
+  const yearsOwned = vehicleInfo["Years Vehicle Owned"];
+  const rideshareOrDelivery = vehicleInfo["Ridesharing/Delivery"];
 
+  // if (recVehicle) {
+  //   const value = recVehicle?.trim().toLowerCase();
+  //   if (value === "y") {
+  //     RecVehicleYNY.checked = true;
+  //     RecVehicleYNY.dispatchEvent(new Event("change", { bubbles: true }));
+  //   } else if (value === "n") {
+  //     RecVehicleYNN.checked = true;
+  //     RecVehicleYNN.dispatchEvent(new Event("change", { bubbles: true }));
+  //   }
+  // }
+
+  if (vinIsKnown) {
+    const value = vinIsKnown?.trim().toLowerCase();
+    if (value === "y") {
+      VINKnownYNY.checked = true;
+      VINKnownYNY.dispatchEvent(new Event("change", { bubbles: true }));
+      VINKnownYNY.dispatchEvent(new Event("click", { bubbles: true }));
+        const interval = setInterval(() => {
+        const VIN = document.querySelector("#PolicyVehicles1VIN");
+        if (VIN) {
+          clearInterval(interval);
+          fillVinField(VIN, vin);
+        }
+      }, 300);
+    } else if (value === "n") {
+      VINKnownYNN.checked = true;
+      VINKnownYNN.dispatchEvent(new Event("change", { bubbles: true }));
+      VINKnownYNN.dispatchEvent(new Event("click", { bubbles: true }));
+    }
+  }
+
+  if (vehicleUse) {
+    for (let option of Vehicles1Use.options) {
+      if (normalize(option.text) === normalize(vehicleUse)) {
+        option.selected = true;
+        Vehicles1Use.dispatchEvent(new Event("change", { bubbles: true }));
+        break;
+      }
+    }
+  }
+
+  if (ownershipType) {
+    for (let option of Vehicles1OwnershipType.options) {
+      if (
+        option.text.trim().toLowerCase() === ownershipType.trim().toLowerCase()
+      ) {
+        option.selected = true;
+        Vehicles1OwnershipType.dispatchEvent(
+          new Event("change", { bubbles: true })
+        );
+        break;
+      }
+    }
+  }
+
+  if (annualMiles) {
+    Vehicles1AnnualMiles.value = annualMiles;
+    Vehicles1AnnualMiles.dispatchEvent(new Event("input", { bubbles: true }));
+  }
+
+  if (yearsOwned) {
+    Vehicles1YearsVehicleOwned.value = yearsOwned;
+    Vehicles1YearsVehicleOwned.dispatchEvent(
+      new Event("input", { bubbles: true })
+    );
+  }
+  
+  if (rideshareOrDelivery) {
+    const value = rideshareOrDelivery.trim().toLowerCase();
+    if (value === "y") {
+      Vehicles1RideshareDeliveryYNY.checked = true;
+      Vehicles1RideshareDeliveryYNY.dispatchEvent(
+        new Event("click", { bubbles: true })
+      );
+      Vehicles1RideshareDeliveryYNY.dispatchEvent(
+        new Event("change", { bubbles: true })
+      );
+    } else if (value === "n") {
+      Vehicles1RideshareDeliveryYNN.checked = true;
+      Vehicles1RideshareDeliveryYNN.dispatchEvent(
+        new Event("click", { bubbles: true })
+      );
+      Vehicles1RideshareDeliveryYNN.dispatchEvent(
+        new Event("change", { bubbles: true })
+      );
+    }
+  }
+
+  function fillVinField(VIN, vin){
+    // 1️⃣ Set the value
+    VIN.value = vin;
+    VIN.dispatchEvent(new Event("input", { bubbles: true }));
+
+    // 2️⃣ Click (focus) into the field
+    VIN.focus();
+    VIN.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+
+    // 3️⃣ Simulate pressing Enter
+    VIN.dispatchEvent(
+      new KeyboardEvent("keydown", {
+        bubbles: true,
+        cancelable: true,
+        key: "Enter",
+        code: "Enter",
+        keyCode: 13,
+        which: 13,
+      })
+    );
+    VIN.dispatchEvent(
+      new KeyboardEvent("keyup", {
+        bubbles: true,
+        cancelable: true,
+        key: "Enter",
+        code: "Enter",
+        keyCode: 13,
+        which: 13,
+      })
+    );
+
+    // 4️⃣ OR click outside (blur) after a short delay
+    setTimeout(() => {
+      VIN.blur();
+      document.body.click(); // simulates clicking outside
+    }, 300); // slight delay so Enter has time to register
+  }
+
+  isAutoFillingVehicle = false;
+  clickContinue();
+
+}
+
+function normalize(str) {
+  return str.replace(/\s+/g, " ").trim().toLowerCase();
+}
+
+function clickContinue() {
+  document.querySelector('#Continue').click();
+}
