@@ -1,0 +1,73 @@
+/* Safeco Brand Colors */
+:root {
+  --safeco-blue: #003366;
+  --safeco-green: #1e661e;
+  --safeco-light-gray: #F5F5F5;
+  --safeco-dark-gray: #333333;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: var(--safeco-light-gray);
+  margin: 0;
+  padding: 20px;
+  width: 300px;
+  color: var(--safeco-dark-gray);
+}
+
+
+h2 {
+  text-align: center;
+  color: var(--safeco-blue);
+  font-size: 20px;
+  margin-bottom: 20px;
+}
+
+.input-group {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+input {
+  flex: 1;
+  padding: 10px;
+  font-size: 14px;
+  border: 2px solid #ccc;
+  border-radius: 5px;
+  outline: none;
+  transition: border-color 0.3s;
+
+  /* new lines */
+  box-sizing: border-box;  /* include padding in width */
+  max-width: 48%;
+}
+
+input:focus {
+  border-color: var(--safeco-blue);
+}
+
+button {
+  padding: 10px 40px;       /* smaller padding */
+  font-size: 16px;         /* smaller font */
+  cursor: pointer;
+  background-color: var(--safeco-blue);
+  color: white;
+  border: none;
+  border-radius: 25px;     /* fully rounded edges */
+  transition: background-color 0.3s;
+  width: auto;             /* button fits content */
+  display: block;
+  margin: 0 auto;          /* center button */
+}
+
+button:hover {
+  background-color: var(--safeco-green);
+  color: var(--safeco-light-gray);
+}
+
+button:active {
+  background-color: var(--safeco-dark-gray);
+  color: white;
+}
+

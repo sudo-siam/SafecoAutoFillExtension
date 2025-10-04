@@ -4,8 +4,11 @@ const API_URL = "https://script.google.com/macros/s/" + SCRIPT_ID + "/exec";
 
 let data = [];
 
-let currentID = 1;
-const maxID = 10;
+let fromId = 0;
+let toId = 0;
+let currentId = 0;
+let observerStarted = false;
+
 let formSection = document
   .querySelector("td.topSelected")
   .innerText.replace(/\n/g, " ");
@@ -15,16 +18,13 @@ let isAutoFillingGaragedLoaction = false;
 let isAutoFillingDrivers = false;
 let isAutoFillingVehicle = false;
 
-async function fetchPolicyInformation() {
-  if (currentID > maxID) {
-    console.log("All policies processed.");
-    return;
-  }
+async function fetchPolicyInformation(id) {
+  
   if(isAutoFillingPolicyInfo) return;
   try {
-    console.log("Fetching ID:", currentID);
+    console.log("Fetching ID:", id);
     const response = await fetch(
-      `${API_URL}?action=getData&id=${currentID}&sheetname=${encodeURIComponent(
+      `${API_URL}?action=getData&id=${id}&sheetname=${encodeURIComponent(
         formSection
       )}`
     );
@@ -53,12 +53,12 @@ async function fetchPolicyInformation() {
   }
 }
 
-async function fetchHouseholdSelections() {
+async function fetchHouseholdSelections(id) {
   if(isAutoFillingHouseholder) return;
   try {
-    console.log("Fetching ID:", currentID);
+    console.log("Fetching ID:", id);
     const response = await fetch(
-      `${API_URL}?action=getData&id=${currentID}&sheetname=${encodeURIComponent(
+      `${API_URL}?action=getData&id=${id}&sheetname=${encodeURIComponent(
         formSection
       )}`
     );
@@ -83,12 +83,12 @@ async function fetchHouseholdSelections() {
   }
 }
 
-async function fetchGaragedLocations() {
+async function fetchGaragedLocations(id) {
   if(isAutoFillingGaragedLoaction) return;
   try {
-    console.log("Fetching ID:", currentID);
+    console.log("Fetching ID:", id);
     const response = await fetch(
-      `${API_URL}?action=getData&id=${currentID}&sheetname=${encodeURIComponent(
+      `${API_URL}?action=getData&id=${id}&sheetname=${encodeURIComponent(
         formSection
       )}`
     );
@@ -115,12 +115,12 @@ async function fetchGaragedLocations() {
   }
 }
 
-async function fetchDrivers() {
+async function fetchDrivers(id) {
   if(isAutoFillingDrivers) return;
   try {
-    console.log("Fetching ID:", currentID);
+    console.log("Fetching ID:", id);
     const response = await fetch(
-      `${API_URL}?action=getData&id=${currentID}&sheetname=${encodeURIComponent(
+      `${API_URL}?action=getData&id=${id}&sheetname=${encodeURIComponent(
         formSection
       )}`
     );
@@ -145,12 +145,12 @@ async function fetchDrivers() {
   }
 }
 
-async function fetchVehicles() {
+async function fetchVehicles(id) {
   if (isAutoFillingVehicle) return;
   try {
-    console.log("Fetching ID:", currentID);
+    console.log("Fetching ID:", id);
     const response = await fetch(
-      `${API_URL}?action=getData&id=${currentID}&sheetname=${encodeURIComponent(
+      `${API_URL}?action=getData&id=${id}&sheetname=${encodeURIComponent(
         formSection
       )}`
     );
@@ -175,51 +175,130 @@ async function fetchVehicles() {
   }
 }
 
-function callAPIForTab(tabName) {
-  if (tabName === "Policy Information") {
-    fetchPolicyInformation();
-  } else if (tabName === "Household Selections") {
-    fetchHouseholdSelections();
-  } else if (tabName === "Garaged Locations") {
-    fetchGaragedLocations();
-  } else if (tabName === "Drivers") {
-    fetchDrivers();
-  } else if (tabName === "Vehicles") {
-    fetchVehicles();
+async function fetchTelematics(id) {
+  try {
+    console.log("Fetching ID:", id);
+    const response = await fetch(
+      `${API_URL}?action=getData&id=${id}&sheetname=${encodeURIComponent(
+        formSection
+      )}`
+    );
+    const json = await response.json();
+    if (json.status === "success") {
+      const telematicsApiData = json.data;
+      console.log("Fetched Telematics:", telematicsApiData);
+      // Fill the form
+      setTimeout(() => {
+        fillUpTelematics([telematicsApiData]);
+      }, 2000);
+
+      await new Promise((res) => setTimeout(res, 500));
+    } else {
+      console.error("API error:", json.message);
+    }
+  } catch (err) {
+    console.error("Fetch error:", err);
   }
 }
 
-// Wait for the tab container to exist
+async function fetchUnderwriting(id) {
+  try {
+    console.log("Fetching ID:", id);
+    const response = await fetch(
+      `${API_URL}?action=getData&id=${id}&sheetname=${encodeURIComponent(
+        formSection
+      )}`
+    );
+    const json = await response.json();
+    if (json.status === "success") {
+      const underwritingApiData = json.data;
+      console.log("Fetched Underwriting:", underwritingApiData);
+      // Fill the form
+      setTimeout(() => {
+        fillUpUnderwriting([underwritingApiData]);
+      }, 2000);
+
+      await new Promise((res) => setTimeout(res, 500));
+    } else {
+      console.error("API error:", json.message);
+    }
+  } catch (err) {
+    console.error("Fetch error:", err);
+  }
+}
+
+function callAPIForTab(id,tabName) {
+  if (tabName === "Policy Information") {
+    fetchPolicyInformation(id);
+  } else if (tabName === "Household Selections") {
+    fetchHouseholdSelections(id);
+  } else if (tabName === "Garaged Locations") {
+    fetchGaragedLocations(id);
+  } else if (tabName === "Drivers") {
+    fetchDrivers(id);
+  } else if (tabName === "Vehicles") {
+    fetchVehicles(id);
+  } else if (tabName === "Telematics") {
+    fetchTelematics(id);
+  } else if (tabName === "Underwriting") {
+    fetchUnderwriting(id);
+  }
+}
+
+
 function initTabObserver() {
-  const tabContainer = document.querySelector("#ScreenTabs1"); // adjust selector
+  const tabContainer = document.querySelector("#ScreenTabs1");
   if (!tabContainer) {
-    setTimeout(initTabObserver, 500); // try again if not loaded yet
+    setTimeout(initTabObserver, 500);
     return;
   }
+  if (observerStarted) return;
+  observerStarted = true;
 
-  // Observe all <td> inside the tab container for class changes
   const observer = new MutationObserver(() => {
     const selectedTab = tabContainer.querySelector("td.topSelected");
     if (selectedTab) {
-      const tabName = selectedTab.innerText.replace(/\n/g, " ");
-      callAPIForTab(tabName);
+      const tabName = selectedTab.innerText.replace(/\n/g, " ").trim();
+      console.log("[observer] tab:", tabName, "id:", currentId);
+      callAPIForTab(currentId, tabName);
     }
   });
 
-  const tabs = tabContainer.querySelectorAll("td");
-  tabs.forEach((td) =>
-    observer.observe(td, { attributes: true, attributeFilter: ["class"] })
-  );
+  observer.observe(tabContainer, {
+    attributes: true,
+    attributeFilter: ["class"],
+    childList: true,
+    subtree: true
+  });
 
-  // Optional: trigger for the initial selected tab
+  // initial run if a tab is already selected
   const initialTab = tabContainer.querySelector("td.topSelected");
-  if (initialTab) {
-    callAPIForTab(initialTab.innerText.replace(/\n/g, " "));
+  const tabName = initialTab.innerText.replace(/\n/g, " ").trim();
+  if (initialTab && tabName != "Coverages") {
+    console.log("[init] starting at tab:", tabName, "id:", currentId);
+    callAPIForTab(currentId, tabName);
   }
 }
 
-// Start observing
-initTabObserver();
+// message listener
+chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+  if (msg.action === "startProcess") {
+    fromId = parseInt(msg.popupFrom, 10);
+    toId = parseInt(msg.popupTo, 10);
+    currentId = fromId;
+    initTabObserver();
+  }
+});
+
+// fallback: if page refreshes or content script reloads, restore range from storage
+chrome.storage.local.get("automationRange", (res) => {
+  if (res && res.automationRange) {
+    fromId = parseInt(res.automationRange.from, 10);
+    toId = parseInt(res.automationRange.to, 10);
+    currentId = fromId;
+    initTabObserver();
+  }
+});
 
 function clickCloseButton() {
   const btn = document.querySelector(
@@ -1177,12 +1256,12 @@ function fillUpVehicle(data) {
       VINKnownYNY.dispatchEvent(new Event("change", { bubbles: true }));
       VINKnownYNY.dispatchEvent(new Event("click", { bubbles: true }));
         const interval = setInterval(() => {
-        const VIN = document.querySelector("#PolicyVehicles1VIN");
-        if (VIN) {
-          clearInterval(interval);
-          fillVinField(VIN, vin);
-        }
-      }, 300);
+          const VIN = document.querySelector("#PolicyVehicles1VIN");
+          if (VIN) {
+            clearInterval(interval);
+            fillVinField(VIN, vin);
+          }
+        }, 100);
     } else if (value === "n") {
       VINKnownYNN.checked = true;
       VINKnownYNN.dispatchEvent(new Event("change", { bubbles: true }));
@@ -1248,52 +1327,184 @@ function fillUpVehicle(data) {
   }
 
   function fillVinField(VIN, vin){
-    // 1️⃣ Set the value
     VIN.value = vin;
-    VIN.dispatchEvent(new Event("input", { bubbles: true }));
-
-    // 2️⃣ Click (focus) into the field
     VIN.focus();
-    VIN.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    VIN.dispatchEvent(new Event("input", { bubbles: true }));
+    VIN.dispatchEvent(new Event("change", { bubbles: true }));
+    VIN.dispatchEvent(new Event("click", { bubbles: true }));
 
-    // 3️⃣ Simulate pressing Enter
-    VIN.dispatchEvent(
-      new KeyboardEvent("keydown", {
-        bubbles: true,
-        cancelable: true,
-        key: "Enter",
-        code: "Enter",
-        keyCode: 13,
-        which: 13,
-      })
-    );
-    VIN.dispatchEvent(
-      new KeyboardEvent("keyup", {
-        bubbles: true,
-        cancelable: true,
-        key: "Enter",
-        code: "Enter",
-        keyCode: 13,
-        which: 13,
-      })
-    );
-
-    // 4️⃣ OR click outside (blur) after a short delay
     setTimeout(() => {
       VIN.blur();
-      document.body.click(); // simulates clicking outside
-    }, 300); // slight delay so Enter has time to register
+      document.querySelector('#tdvehicles').click();
+    }, 500); 
   }
 
+  // document.querySelector('#tdvehicles').click();
   isAutoFillingVehicle = false;
   clickContinue();
 
+}
+
+function fillUpTelematics(data) {
+  const TelematicsStatus = document.querySelector("#PolicyDrivers1TelematicsStatus");
+  const telematicsInfo = data[0];
+  const rightTrackStatus = telematicsInfo["RightTrack Status"];
+  const emailAddress = telematicsInfo["Email Address"];
+  if (rightTrackStatus) {
+    for (let option of TelematicsStatus.options) {
+      if (
+        normalize(option.text) === normalize(rightTrackStatus)
+      ) {
+        option.selected = true;
+        TelematicsStatus.dispatchEvent(
+          new Event("change", { bubbles: true })
+        );
+        break;
+      }
+      if (rightTrackStatus === "Opt In With Compatible Smartphone") {
+        const waitForField = () => {
+        const emailAddressField = document.querySelector('#PolicyClientEmailAddress');
+        if (emailAddressField) {
+          emailAddressField.value = emailAddress;
+          emailAddressField.dispatchEvent(new Event("input", { bubbles: true }));
+          } else {
+            setTimeout(waitForField, 100);
+          }
+        };
+        waitForField();
+      }
+    }
+  } 
+  clickContinue();
+} 
+
+function fillUpUnderwriting(data) {
+  const PolicyAutoDataResidenceType = document.querySelector('#PolicyAutoDataResidenceType');
+  const PolicyDriverPersonCommonOccupationCategory = document.querySelector('#PolicyDriverPersonCommonOccupationCategory');
+  const PolicyDriverPersonEducation = document.querySelector('#PolicyDriverPersonEducation');
+  const PolicyAutoDataPaperlessDocumentsDiscYNY = document.querySelector('#PolicyAutoDataPaperlessDocumentsDiscYNY');
+  const PolicyAutoDataPaperlessDocumentsDiscYNN = document.querySelector('#PolicyAutoDataPaperlessDocumentsDiscYNN');
+
+  const underwritingInfo = data[0];
+  const residenceType = underwritingInfo['Residence Type'];
+  const commonOccupations = underwritingInfo['Common Occupations'];
+  const levelOfEducation = underwritingInfo['Highest Level of Education'];
+  const paperlessDocument = underwritingInfo['Paperless Documents'];
+
+  if (residenceType) {
+    for (let option of PolicyAutoDataResidenceType.options) {
+      if (
+        option.text.trim().toLowerCase() === residenceType.trim().toLowerCase()
+      ) {
+        option.selected = true;
+        PolicyAutoDataResidenceType.dispatchEvent(
+          new Event("change", { bubbles: true })
+        );
+        break;
+      }
+    }
+  }
+
+  if (commonOccupations) {
+    for (let option of PolicyDriverPersonCommonOccupationCategory.options) {
+      if (
+        option.text.trim().toLowerCase() === commonOccupations.trim().toLowerCase()
+      ) {
+        option.selected = true;
+        PolicyDriverPersonCommonOccupationCategory.dispatchEvent(
+          new Event("change", { bubbles: true })
+        );
+        break;
+      }
+    }
+  }
+
+  if (levelOfEducation) {
+    for (let option of PolicyDriverPersonEducation.options) {
+      if (
+        option.text.trim().toLowerCase() === levelOfEducation.trim().toLowerCase()
+      ) {
+        option.selected = true;
+        PolicyDriverPersonEducation.dispatchEvent(
+          new Event("change", { bubbles: true })
+        );
+        break;
+      }
+    }
+  }
+
+  if (paperlessDocument) {
+    const value = paperlessDocument?.trim().toLowerCase();
+    if (value === "y") {
+      PolicyAutoDataPaperlessDocumentsDiscYNY.checked = true;
+      PolicyAutoDataPaperlessDocumentsDiscYNY.dispatchEvent(
+        new Event("click", { bubbles: true })
+      );
+      PolicyAutoDataPaperlessDocumentsDiscYNY.dispatchEvent(
+        new Event("change", { bubbles: true })
+      );
+    } else if (value === "n") {
+      PolicyAutoDataPaperlessDocumentsDiscYNN.checked = true;
+      PolicyAutoDataPaperlessDocumentsDiscYNN.dispatchEvent(
+        new Event("click", { bubbles: true })
+      );
+      PolicyAutoDataPaperlessDocumentsDiscYNN.dispatchEvent(
+        new Event("change", { bubbles: true })
+      );
+    }
+  }
+  clickContinue(true);
+  clickPDFLink();
 }
 
 function normalize(str) {
   return str.replace(/\s+/g, " ").trim().toLowerCase();
 }
 
-function clickContinue() {
-  document.querySelector('#Continue').click();
+function clickContinue(isLastTab = false) {
+  const btn = document.querySelector("#Continue");
+  if (!btn) return;
+  
+  if (!isLastTab) {
+    btn.click();
+  }
+  
+  // If we just clicked Continue from the last tab, advance the ID
+  if (isLastTab) {
+    if (currentId <= toId) {
+      currentId++;
+      console.log("➡️ moving to next ID:", currentId);
+
+      // optionally give the app a short moment to render the new ID's first tab
+      setTimeout(() => {
+        const tabContainer = document.querySelector("#ScreenTabs1");
+        const firstTab = tabContainer?.querySelector("td"); // first tab element
+        if (firstTab) {
+          firstTab.click();
+          const firstName = firstTab.innerText.replace(/\n/g, " ").trim();
+          callAPIForTab(currentId, firstName);
+        }
+      }, 700);
+    } else {
+      console.log("✅ All IDs done.");
+      chrome.storage.local.remove("automationRange");
+    }
+  }
+
+  setTimeout(() => {
+    const tabContainer = document.querySelector("#ScreenTabs1");
+    const sel = tabContainer?.querySelector("td.topSelected");
+    if (sel) {
+      const tabName = sel.innerText.replace(/\n/g, " ").trim();
+      console.log("[clickContinue] now on:", tabName, "id:", currentId);
+      callAPIForTab(currentId, tabName);
+    }
+  }, 1000);
+}
+
+function clickPDFLink() {
+  const link = document.querySelector('span[onclick*="CurrentCarrierReportViewer"]');
+  if (link) {
+    link.click();
+  }
 }

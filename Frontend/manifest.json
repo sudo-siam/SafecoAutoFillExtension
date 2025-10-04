@@ -5,8 +5,12 @@
   "permissions": [
     "tabs",
     "storage",
+    "scripting",
+    "downloads",
+    "activeTab",
+    "webNavigation",
     "https://script.google.com/macros/s/*",
-    "scripting"
+    "<all_urls>"
   ],
   "host_permissions": [
     "https://script.google.com/macros/s/*",
