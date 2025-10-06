@@ -1,17 +1,14 @@
 var SCRIPT_ID =
-  "AKfycbz7Fq8GZDirn_jtVwhAKCHBTETNHKPHAywi3yzjA3Rg28hbR8dKRf74z7U597puHGAE";
+"AKfycbz7Fq8GZDirn_jtVwhAKCHBTETNHKPHAywi3yzjA3Rg28hbR8dKRf74z7U597puHGAE";
 const API_URL = "https://script.google.com/macros/s/" + SCRIPT_ID + "/exec";
 
 let data = [];
-
 let fromId = 0;
 let toId = 0;
 let currentId = 0;
 let observerStarted = false;
 
-let formSection = document
-  .querySelector("td.topSelected")
-  .innerText.replace(/\n/g, " ");
+let formSection = document.querySelector("td.topSelected")?.innerText.replace(/\n/g, " ");
 let isAutoFillingPolicyInfo = false;
 let isAutoFillingHouseholder = false;
 let isAutoFillingGaragedLoaction = false;
@@ -274,8 +271,7 @@ function initTabObserver() {
   // initial run if a tab is already selected
   const initialTab = tabContainer.querySelector("td.topSelected");
   const tabName = initialTab.innerText.replace(/\n/g, " ").trim();
-  if (initialTab && tabName != "Coverages") {
-    console.log("[init] starting at tab:", tabName, "id:", currentId);
+  if (initialTab) {
     callAPIForTab(currentId, tabName);
   }
 }
@@ -286,19 +282,41 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     fromId = parseInt(msg.popupFrom, 10);
     toId = parseInt(msg.popupTo, 10);
     currentId = fromId;
+    let state = "utah";
+    openForm(state);
     initTabObserver();
   }
 });
 
-// fallback: if page refreshes or content script reloads, restore range from storage
 chrome.storage.local.get("automationRange", (res) => {
   if (res && res.automationRange) {
     fromId = parseInt(res.automationRange.from, 10);
     toId = parseInt(res.automationRange.to, 10);
-    currentId = fromId;
-    initTabObserver();
+    currentId = res.automationRange.current
+      ? parseInt(res.automationRange.current, 10)
+      : fromId;
+
+    console.log("[resume] loaded range:", fromId, "to", toId, "current:", currentId, "url:", location.href);
+
+    // if we just came back to the 'now' page
+    if (res.automationRange.returnToNow && location.hostname.includes("now.agent.safeco.com")) {
+      console.log("[resume] detected return to now.agent page — restarting process...");
+      // clear flag to prevent looping
+      delete res.automationRange.returnToNow;
+      chrome.storage.local.set({ automationRange: res.automationRange });
+      
+      // restart main process
+      setTimeout(() => {
+        openForm("utah");
+        initTabObserver();
+      }, 2500);
+    } else if (location.hostname.includes("personal.safeco.com")) {
+      // normal resume
+      initTabObserver();
+    }
   }
 });
+
 
 function clickCloseButton() {
   const btn = document.querySelector(
@@ -309,6 +327,40 @@ function clickCloseButton() {
   } else {
     setTimeout(clickCloseButton, 200); // retry every 200ms
   }
+}
+
+function openForm(state = "utah") {
+  const checkInterval = setInterval(() => {
+    const quoteBtn = document.querySelector("#pl-quote-button");
+    if (!quoteBtn) return;
+
+    clearInterval(checkInterval);
+    quoteBtn.click();
+
+    // 3. Select state
+    const select = document.querySelector("#select-7-select");
+    if (select) {
+      for (let option of select.options) {
+        if (option.text.trim().toLowerCase() === state.toLowerCase()) {
+          option.selected = true;
+          select.dispatchEvent(new Event("change", { bubbles: true }));
+          console.log("✅ Selected state:", state);
+          break;
+        }
+      }
+    }
+
+    // 4. Click Auto link (wait for it to appear)
+    const autoInterval = setInterval(() => {
+      const autoLink = [...document.querySelectorAll("a.lm-Link.lm-LinkStandalone")]
+        .find(a => a.textContent.trim() === "Auto");
+      if (!autoLink) return;
+
+      clearInterval(autoInterval);
+      autoLink.click();
+      console.log("✅ Auto link clicked, form should open");
+    }, 500);
+  }, 500);
 }
 
 // clickCloseButton();
@@ -785,7 +837,7 @@ function fillUpHouseHold(data) {
   const householderInfo = data[0];
   const relationShip = householderInfo['Relationship To Insured'];
 
-  if(relationShip){
+  if(PolicyDriverCandidates2CandidateRelationship && relationShip){
     for (let option of PolicyDriverCandidates2CandidateRelationship.options) {
       if (
         normalize(option.text) === normalize(relationShip)
@@ -1453,8 +1505,8 @@ function fillUpUnderwriting(data) {
       );
     }
   }
-  clickContinue(true);
   clickPDFLink();
+  clickContinue(true);
 }
 
 function normalize(str) {
@@ -1469,37 +1521,38 @@ function clickContinue(isLastTab = false) {
     btn.click();
   }
   
-  // If we just clicked Continue from the last tab, advance the ID
   if (isLastTab) {
-    if (currentId <= toId) {
+    if (currentId < toId) {
       currentId++;
       console.log("➡️ moving to next ID:", currentId);
 
-      // optionally give the app a short moment to render the new ID's first tab
-      setTimeout(() => {
-        const tabContainer = document.querySelector("#ScreenTabs1");
-        const firstTab = tabContainer?.querySelector("td"); // first tab element
-        if (firstTab) {
-          firstTab.click();
-          const firstName = firstTab.innerText.replace(/\n/g, " ").trim();
-          callAPIForTab(currentId, firstName);
-        }
-      }, 700);
+      // save progress
+      chrome.storage.local.set({
+        automationRange: { 
+          from: fromId, 
+          to: toId, 
+          current: currentId, 
+          returnToNow: true }
+      });
+
+      window.location.href = "https://now.agent.safeco.com/start";
+
     } else {
       console.log("✅ All IDs done.");
       chrome.storage.local.remove("automationRange");
     }
+  } else {
+    // 👇 only run this on normal tabs, not last tab
+    setTimeout(() => {
+      const tabContainer = document.querySelector("#ScreenTabs1");
+      const sel = tabContainer?.querySelector("td.topSelected");
+      if (sel) {
+        const tabName = sel.innerText.replace(/\n/g, " ").trim();
+        console.log("[clickContinue] now on:", tabName, "id:", currentId);
+        callAPIForTab(currentId, tabName);
+      }
+    }, 1000);
   }
-
-  setTimeout(() => {
-    const tabContainer = document.querySelector("#ScreenTabs1");
-    const sel = tabContainer?.querySelector("td.topSelected");
-    if (sel) {
-      const tabName = sel.innerText.replace(/\n/g, " ").trim();
-      console.log("[clickContinue] now on:", tabName, "id:", currentId);
-      callAPIForTab(currentId, tabName);
-    }
-  }, 1000);
 }
 
 function clickPDFLink() {
@@ -1508,3 +1561,46 @@ function clickPDFLink() {
     link.click();
   }
 }
+
+function reopenFormForNextId(state = "utah") {
+  console.log("🔄 Re-entering form for next ID...");
+
+  // 1. Navigate
+  window.location.href = "https://now.agent.safeco.com/start";
+
+  // 2–4. Wait until DOM is ready
+  const checkInterval = setInterval(() => {
+    const quoteBtn = document.querySelector("#pl-quote-button");
+    if (!quoteBtn) return;
+
+    clearInterval(checkInterval);
+    quoteBtn.click();
+    console.log("✅ Clicked quote button");
+
+    // 3. Select state
+    const select = document.querySelector("#select-11-select");
+    if (select) {
+      for (let option of select.options) {
+        if (option.text.trim().toLowerCase() === state.toLowerCase()) {
+          option.selected = true;
+          select.dispatchEvent(new Event("change", { bubbles: true }));
+          console.log("✅ Selected state:", state);
+          break;
+        }
+      }
+    }
+
+    // 4. Click Auto link (wait for it to appear)
+    const autoInterval = setInterval(() => {
+      const autoLink = [...document.querySelectorAll("a.lm-Link.lm-LinkStandalone")]
+        .find(a => a.textContent.trim() === "Auto");
+      if (!autoLink) return;
+
+      clearInterval(autoInterval);
+      autoLink.click();
+      console.log("✅ Auto link clicked, form should open");
+    }, 500);
+  }, 500);
+}
+
+

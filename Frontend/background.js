@@ -1,8 +1,11 @@
 chrome.webNavigation.onCommitted.addListener((details) => {
-  if (details.url.includes("CurrentCarrierReportViewer.aspx") && details.frameId === 0) {
+  if (details.frameId !== 0) return;
+
+  // Case 1: print the PDF
+  if (details.url.includes("CurrentCarrierReportViewer.aspx")) {
     chrome.scripting.executeScript({
       target: { tabId: details.tabId },
-      func: () => window.print() // opens print dialog
+      func: () => window.print()
     });
   }
 });
