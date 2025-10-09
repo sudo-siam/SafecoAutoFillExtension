@@ -1,5 +1,5 @@
-var SCRIPT_ID =
-"AKfycbz7Fq8GZDirn_jtVwhAKCHBTETNHKPHAywi3yzjA3Rg28hbR8dKRf74z7U597puHGAE";
+console.log("[Safeco Extension] content.js loaded on", location.href);
+
 const API_URL = "https://script.google.com/macros/s/" + SCRIPT_ID + "/exec";
 
 let data = [];
@@ -8,7 +8,9 @@ let toId = 0;
 let currentId = 0;
 let observerStarted = false;
 
-let formSection = document.querySelector("td.topSelected")?.innerText.replace(/\n/g, " ");
+let formSection = document
+  .querySelector("td.topSelected")
+  ?.innerText.replace(/\n/g, " ");
 let isAutoFillingPolicyInfo = false;
 let isAutoFillingHouseholder = false;
 let isAutoFillingGaragedLoaction = false;
@@ -16,8 +18,7 @@ let isAutoFillingDrivers = false;
 let isAutoFillingVehicle = false;
 
 async function fetchPolicyInformation(id) {
-  
-  if(isAutoFillingPolicyInfo) return;
+  if (isAutoFillingPolicyInfo) return;
   try {
     console.log("Fetching ID:", id);
     const response = await fetch(
@@ -51,7 +52,7 @@ async function fetchPolicyInformation(id) {
 }
 
 async function fetchHouseholdSelections(id) {
-  if(isAutoFillingHouseholder) return;
+  if (isAutoFillingHouseholder) return;
   try {
     console.log("Fetching ID:", id);
     const response = await fetch(
@@ -81,7 +82,7 @@ async function fetchHouseholdSelections(id) {
 }
 
 async function fetchGaragedLocations(id) {
-  if(isAutoFillingGaragedLoaction) return;
+  if (isAutoFillingGaragedLoaction) return;
   try {
     console.log("Fetching ID:", id);
     const response = await fetch(
@@ -113,7 +114,7 @@ async function fetchGaragedLocations(id) {
 }
 
 async function fetchDrivers(id) {
-  if(isAutoFillingDrivers) return;
+  if (isAutoFillingDrivers) return;
   try {
     console.log("Fetching ID:", id);
     const response = await fetch(
@@ -224,7 +225,7 @@ async function fetchUnderwriting(id) {
   }
 }
 
-function callAPIForTab(id,tabName) {
+function callAPIForTab(id, tabName) {
   if (tabName === "Policy Information") {
     fetchPolicyInformation(id);
   } else if (tabName === "Household Selections") {
@@ -241,7 +242,6 @@ function callAPIForTab(id,tabName) {
     fetchUnderwriting(id);
   }
 }
-
 
 function initTabObserver() {
   const tabContainer = document.querySelector("#ScreenTabs1");
@@ -265,7 +265,7 @@ function initTabObserver() {
     attributes: true,
     attributeFilter: ["class"],
     childList: true,
-    subtree: true
+    subtree: true,
   });
 
   // initial run if a tab is already selected
@@ -282,13 +282,13 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     fromId = parseInt(msg.popupFrom, 10);
     toId = parseInt(msg.popupTo, 10);
     currentId = fromId;
-    let state = "utah";
+    let state = msg.state;
     openForm(state);
     initTabObserver();
   }
 });
 
-chrome.storage.local.get("automationRange", (res) => {
+chrome.storage.local.get("automationRange", async (res) => {
   if (res && res.automationRange) {
     fromId = parseInt(res.automationRange.from, 10);
     toId = parseInt(res.automationRange.to, 10);
@@ -296,18 +296,32 @@ chrome.storage.local.get("automationRange", (res) => {
       ? parseInt(res.automationRange.current, 10)
       : fromId;
 
-    console.log("[resume] loaded range:", fromId, "to", toId, "current:", currentId, "url:", location.href);
+    console.log(
+      "[resume] loaded range:",
+      fromId,
+      "to",
+      toId,
+      "current:",
+      currentId,
+      "url:",
+      location.href
+    );
 
     // if we just came back to the 'now' page
-    if (res.automationRange.returnToNow && location.hostname.includes("now.agent.safeco.com")) {
-      console.log("[resume] detected return to now.agent page — restarting process...");
+    if (
+      res.automationRange.returnToNow &&
+      location.hostname.includes("now.agent.safeco.com")
+    ) {
+      console.log(
+        "[resume] detected return to now.agent page — restarting process..."
+      );
       // clear flag to prevent looping
       delete res.automationRange.returnToNow;
       chrome.storage.local.set({ automationRange: res.automationRange });
-      
+      const state = await fetchState(currentId);
       // restart main process
       setTimeout(() => {
-        openForm("utah");
+        openForm(state);
         initTabObserver();
       }, 2500);
     } else if (location.hostname.includes("personal.safeco.com")) {
@@ -316,7 +330,6 @@ chrome.storage.local.get("automationRange", (res) => {
     }
   }
 });
-
 
 function clickCloseButton() {
   const btn = document.querySelector(
@@ -329,7 +342,7 @@ function clickCloseButton() {
   }
 }
 
-function openForm(state = "utah") {
+function openForm(state) {
   const checkInterval = setInterval(() => {
     const quoteBtn = document.querySelector("#pl-quote-button");
     if (!quoteBtn) return;
@@ -352,8 +365,9 @@ function openForm(state = "utah") {
 
     // 4. Click Auto link (wait for it to appear)
     const autoInterval = setInterval(() => {
-      const autoLink = [...document.querySelectorAll("a.lm-Link.lm-LinkStandalone")]
-        .find(a => a.textContent.trim() === "Auto");
+      const autoLink = [
+        ...document.querySelectorAll("a.lm-Link.lm-LinkStandalone"),
+      ].find((a) => a.textContent.trim() === "Auto");
       if (!autoLink) return;
 
       clearInterval(autoInterval);
@@ -832,16 +846,16 @@ function fillUpPolicyInformation(data) {
 }
 
 function fillUpHouseHold(data) {
-  const PolicyDriverCandidates2CandidateRelationship = document.querySelector('#PolicyDriverCandidates2CandidateRelationship');
+  const PolicyDriverCandidates2CandidateRelationship = document.querySelector(
+    "#PolicyDriverCandidates2CandidateRelationship"
+  );
 
   const householderInfo = data[0];
-  const relationShip = householderInfo['Relationship To Insured'];
+  const relationShip = householderInfo["Relationship To Insured"];
 
-  if(PolicyDriverCandidates2CandidateRelationship && relationShip){
+  if (PolicyDriverCandidates2CandidateRelationship && relationShip) {
     for (let option of PolicyDriverCandidates2CandidateRelationship.options) {
-      if (
-        normalize(option.text) === normalize(relationShip)
-      ) {
+      if (normalize(option.text) === normalize(relationShip)) {
         option.selected = true;
         PolicyDriverCandidates2CandidateRelationship.dispatchEvent(
           new Event("change", { bubbles: true })
@@ -928,7 +942,6 @@ function fillUpGaragedLocations(data) {
 
   isAutoFillingGaragedLoaction = false;
   clickContinue();
-
 }
 
 function fillUpDrivers(data) {
@@ -1251,7 +1264,6 @@ function fillUpDrivers(data) {
 
   isAutoFillingDrivers = false;
   clickContinue();
-
 }
 
 function fillUpVehicle(data) {
@@ -1281,7 +1293,7 @@ function fillUpVehicle(data) {
 
   const vehicleInfo = data[0];
   const recVehicle = vehicleInfo["Recreational Vehicle"];
-  const vinIsKnown = vehicleInfo['Vehicle VIN is known'];
+  const vinIsKnown = vehicleInfo["Vehicle VIN is known"];
   const vin = vehicleInfo["VIN"];
   const vehicleUse = vehicleInfo["Vehicle Use"];
   const ownershipType = vehicleInfo["Ownership Type"];
@@ -1307,13 +1319,13 @@ function fillUpVehicle(data) {
       VINKnownYNY.checked = true;
       VINKnownYNY.dispatchEvent(new Event("change", { bubbles: true }));
       VINKnownYNY.dispatchEvent(new Event("click", { bubbles: true }));
-        const interval = setInterval(() => {
-          const VIN = document.querySelector("#PolicyVehicles1VIN");
-          if (VIN) {
-            clearInterval(interval);
-            fillVinField(VIN, vin);
-          }
-        }, 100);
+      const interval = setInterval(() => {
+        const VIN = document.querySelector("#PolicyVehicles1VIN");
+        if (VIN) {
+          clearInterval(interval);
+          fillVinField(VIN, vin);
+        }
+      }, 100);
     } else if (value === "n") {
       VINKnownYNN.checked = true;
       VINKnownYNN.dispatchEvent(new Event("change", { bubbles: true }));
@@ -1356,7 +1368,7 @@ function fillUpVehicle(data) {
       new Event("input", { bubbles: true })
     );
   }
-  
+
   if (rideshareOrDelivery) {
     const value = rideshareOrDelivery.trim().toLowerCase();
     if (value === "y") {
@@ -1378,7 +1390,7 @@ function fillUpVehicle(data) {
     }
   }
 
-  function fillVinField(VIN, vin){
+  function fillVinField(VIN, vin) {
     VIN.value = vin;
     VIN.focus();
     VIN.dispatchEvent(new Event("input", { bubbles: true }));
@@ -1387,38 +1399,39 @@ function fillUpVehicle(data) {
 
     setTimeout(() => {
       VIN.blur();
-      document.querySelector('#tdvehicles').click();
-    }, 500); 
+      document.querySelector("#tdvehicles").click();
+    }, 500);
   }
 
   // document.querySelector('#tdvehicles').click();
   isAutoFillingVehicle = false;
   clickContinue();
-
 }
 
 function fillUpTelematics(data) {
-  const TelematicsStatus = document.querySelector("#PolicyDrivers1TelematicsStatus");
+  const TelematicsStatus = document.querySelector(
+    "#PolicyDrivers1TelematicsStatus"
+  );
   const telematicsInfo = data[0];
   const rightTrackStatus = telematicsInfo["RightTrack Status"];
   const emailAddress = telematicsInfo["Email Address"];
   if (rightTrackStatus) {
     for (let option of TelematicsStatus.options) {
-      if (
-        normalize(option.text) === normalize(rightTrackStatus)
-      ) {
+      if (normalize(option.text) === normalize(rightTrackStatus)) {
         option.selected = true;
-        TelematicsStatus.dispatchEvent(
-          new Event("change", { bubbles: true })
-        );
+        TelematicsStatus.dispatchEvent(new Event("change", { bubbles: true }));
         break;
       }
       if (rightTrackStatus === "Opt In With Compatible Smartphone") {
         const waitForField = () => {
-        const emailAddressField = document.querySelector('#PolicyClientEmailAddress');
-        if (emailAddressField) {
-          emailAddressField.value = emailAddress;
-          emailAddressField.dispatchEvent(new Event("input", { bubbles: true }));
+          const emailAddressField = document.querySelector(
+            "#PolicyClientEmailAddress"
+          );
+          if (emailAddressField) {
+            emailAddressField.value = emailAddress;
+            emailAddressField.dispatchEvent(
+              new Event("input", { bubbles: true })
+            );
           } else {
             setTimeout(waitForField, 100);
           }
@@ -1426,22 +1439,32 @@ function fillUpTelematics(data) {
         waitForField();
       }
     }
-  } 
+  }
   clickContinue();
-} 
+}
 
 function fillUpUnderwriting(data) {
-  const PolicyAutoDataResidenceType = document.querySelector('#PolicyAutoDataResidenceType');
-  const PolicyDriverPersonCommonOccupationCategory = document.querySelector('#PolicyDriverPersonCommonOccupationCategory');
-  const PolicyDriverPersonEducation = document.querySelector('#PolicyDriverPersonEducation');
-  const PolicyAutoDataPaperlessDocumentsDiscYNY = document.querySelector('#PolicyAutoDataPaperlessDocumentsDiscYNY');
-  const PolicyAutoDataPaperlessDocumentsDiscYNN = document.querySelector('#PolicyAutoDataPaperlessDocumentsDiscYNN');
+  const PolicyAutoDataResidenceType = document.querySelector(
+    "#PolicyAutoDataResidenceType"
+  );
+  const PolicyDriverPersonCommonOccupationCategory = document.querySelector(
+    "#PolicyDriverPersonCommonOccupationCategory"
+  );
+  const PolicyDriverPersonEducation = document.querySelector(
+    "#PolicyDriverPersonEducation"
+  );
+  const PolicyAutoDataPaperlessDocumentsDiscYNY = document.querySelector(
+    "#PolicyAutoDataPaperlessDocumentsDiscYNY"
+  );
+  const PolicyAutoDataPaperlessDocumentsDiscYNN = document.querySelector(
+    "#PolicyAutoDataPaperlessDocumentsDiscYNN"
+  );
 
   const underwritingInfo = data[0];
-  const residenceType = underwritingInfo['Residence Type'];
-  const commonOccupations = underwritingInfo['Common Occupations'];
-  const levelOfEducation = underwritingInfo['Highest Level of Education'];
-  const paperlessDocument = underwritingInfo['Paperless Documents'];
+  const residenceType = underwritingInfo["Residence Type"];
+  const commonOccupations = underwritingInfo["Common Occupations"];
+  const levelOfEducation = underwritingInfo["Highest Level of Education"];
+  const paperlessDocument = underwritingInfo["Paperless Documents"];
 
   if (residenceType) {
     for (let option of PolicyAutoDataResidenceType.options) {
@@ -1460,7 +1483,8 @@ function fillUpUnderwriting(data) {
   if (commonOccupations) {
     for (let option of PolicyDriverPersonCommonOccupationCategory.options) {
       if (
-        option.text.trim().toLowerCase() === commonOccupations.trim().toLowerCase()
+        option.text.trim().toLowerCase() ===
+        commonOccupations.trim().toLowerCase()
       ) {
         option.selected = true;
         PolicyDriverPersonCommonOccupationCategory.dispatchEvent(
@@ -1474,7 +1498,8 @@ function fillUpUnderwriting(data) {
   if (levelOfEducation) {
     for (let option of PolicyDriverPersonEducation.options) {
       if (
-        option.text.trim().toLowerCase() === levelOfEducation.trim().toLowerCase()
+        option.text.trim().toLowerCase() ===
+        levelOfEducation.trim().toLowerCase()
       ) {
         option.selected = true;
         PolicyDriverPersonEducation.dispatchEvent(
@@ -1516,11 +1541,11 @@ function normalize(str) {
 function clickContinue(isLastTab = false) {
   const btn = document.querySelector("#Continue");
   if (!btn) return;
-  
+
   if (!isLastTab) {
     btn.click();
   }
-  
+
   if (isLastTab) {
     if (currentId < toId) {
       currentId++;
@@ -1528,15 +1553,15 @@ function clickContinue(isLastTab = false) {
 
       // save progress
       chrome.storage.local.set({
-        automationRange: { 
-          from: fromId, 
-          to: toId, 
-          current: currentId, 
-          returnToNow: true }
+        automationRange: {
+          from: fromId,
+          to: toId,
+          current: currentId,
+          returnToNow: true,
+        },
       });
 
       window.location.href = "https://now.agent.safeco.com/start";
-
     } else {
       console.log("✅ All IDs done.");
       chrome.storage.local.remove("automationRange");
@@ -1556,51 +1581,10 @@ function clickContinue(isLastTab = false) {
 }
 
 function clickPDFLink() {
-  const link = document.querySelector('span[onclick*="CurrentCarrierReportViewer"]');
+  const link = document.querySelector(
+    'span[onclick*="CurrentCarrierReportViewer"]'
+  );
   if (link) {
     link.click();
   }
 }
-
-function reopenFormForNextId(state = "utah") {
-  console.log("🔄 Re-entering form for next ID...");
-
-  // 1. Navigate
-  window.location.href = "https://now.agent.safeco.com/start";
-
-  // 2–4. Wait until DOM is ready
-  const checkInterval = setInterval(() => {
-    const quoteBtn = document.querySelector("#pl-quote-button");
-    if (!quoteBtn) return;
-
-    clearInterval(checkInterval);
-    quoteBtn.click();
-    console.log("✅ Clicked quote button");
-
-    // 3. Select state
-    const select = document.querySelector("#select-11-select");
-    if (select) {
-      for (let option of select.options) {
-        if (option.text.trim().toLowerCase() === state.toLowerCase()) {
-          option.selected = true;
-          select.dispatchEvent(new Event("change", { bubbles: true }));
-          console.log("✅ Selected state:", state);
-          break;
-        }
-      }
-    }
-
-    // 4. Click Auto link (wait for it to appear)
-    const autoInterval = setInterval(() => {
-      const autoLink = [...document.querySelectorAll("a.lm-Link.lm-LinkStandalone")]
-        .find(a => a.textContent.trim() === "Auto");
-      if (!autoLink) return;
-
-      clearInterval(autoInterval);
-      autoLink.click();
-      console.log("✅ Auto link clicked, form should open");
-    }, 500);
-  }, 500);
-}
-
-
