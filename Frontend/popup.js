@@ -11,7 +11,7 @@ startBtn.addEventListener("click", async () => {
     alert("Please enter both From and To IDs");
     return;
   }
-
+  
   // persist the range so content/background can read it later
   chrome.storage.local.set({ automationRange: { from: fromId, to: toId } }, () => {
     chrome.tabs.query({ active: true}, async (tabs) => {
